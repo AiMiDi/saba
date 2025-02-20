@@ -20,17 +20,20 @@ set (
 )
 
 # OBJ Model
-set (
-    MODEL_OBJ_SOURCE
-    Saba/Model/OBJ/OBJModel.cpp
-    Saba/Model/OBJ/tinyobjloader.cpp
-)
-set (
-    MODEL_OBJ_HEADER
-    Saba/Model/OBJ/OBJModel.h
-)
+if (SABA_BUILD_OBJ_MODEL)
+    set (
+        MODEL_OBJ_SOURCE
+        Saba/Model/OBJ/OBJModel.cpp
+        Saba/Model/OBJ/tinyobjloader.cpp
+    )
+    set (
+        MODEL_OBJ_HEADER
+        Saba/Model/OBJ/OBJModel.h
+    )
+endif ()
 
 # XFile Model
+if (SABA_BUILD_X_MODEL)
 set (
     MODEL_XFILE_SOURCE
     Saba/Model/XFile/XFileModel.cpp
@@ -40,6 +43,7 @@ set (
     MODEL_XFILE_HEADER
     Saba/Model/XFile/XFileModel.h
 )
+endif ()
 
 # MMD Model
 set (
@@ -95,6 +99,13 @@ add_library(
     ${MODEL_MMD_HEADER}
 )
 
+if (SABA_BUILD_OBJ_MODEL)
+    target_include_directories(Saba PRIVATE ${PROJECT_SOURCE_DIR}/external/tinyobjloader/include)
+endif ()
+if (SABA_BUILD_X_MODEL)
+    target_include_directories(Saba PRIVATE ${PROJECT_SOURCE_DIR}/external/tinyxfileloader/include)
+endif ()
+
 set (Saba_LIBRARIES ${BULLET_LIBRARIES})
 if (UNIX)
     find_package(Threads REQUIRED)
@@ -104,8 +115,12 @@ endif ()
 target_link_libraries(Saba PRIVATE ${Saba_LIBRARIES})
 
 SOURCE_GROUP(Base FILES ${BASE_SOURCE} ${BASE_HEADER})
-SOURCE_GROUP(Model\\OBJ FILES ${MODEL_OBJ_SOURCE} ${MODEL_OBJ_HEADER})
-SOURCE_GROUP(Model\\XFile FILES ${MODEL_XFILE_SOURCE} ${MODEL_XFILE_HEADER})
+if (SABA_BUILD_OBJ_MODEL)
+    SOURCE_GROUP(Model\\OBJ FILES ${MODEL_OBJ_SOURCE} ${MODEL_OBJ_HEADER})
+endif ()
+if (SABA_BUILD_X_MODEL)
+    SOURCE_GROUP(Model\\XFile FILES ${MODEL_XFILE_SOURCE} ${MODEL_XFILE_HEADER})
+endif ()
 SOURCE_GROUP(Model\\MMD FILES ${MODEL_MMD_SOURCE} ${MODEL_MMD_HEADER})
 
 # install
