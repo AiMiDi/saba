@@ -11,11 +11,11 @@
 #include <memory>
 #include <algorithm>
 #include <spdlog/spdlog.h>
-#include <assert.h>
+#include <cassert>
 
 namespace saba
 {
-	class DefaultSink : public spdlog::sinks::sink
+	class DefaultSink final : public spdlog::sinks::sink
 	{
 	public:
 		DefaultSink();
@@ -49,7 +49,7 @@ namespace saba
 		{
 			auto name = m_logger->name();
 			auto sinks = m_logger->sinks();
-			auto removeIt = std::remove_if(
+			const auto removeIt = std::remove_if(
 				sinks.begin(),
 				sinks.end(),
 				[removeSink](const spdlog::sink_ptr& ptr) { return ptr.get() == removeSink; }

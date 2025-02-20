@@ -24,8 +24,8 @@ namespace saba
 	namespace
 	{
 #if _WIN32
-		const char PathDelimiter = '\\';
-		const char* PathDelimiters = "\\/";
+		constexpr char PathDelimiter = '\\';
+		auto PathDelimiters = "\\/";
 #else
 		const char PathDelimiter = '/';
 		const char* PathDelimiters = "/";
@@ -36,7 +36,7 @@ namespace saba
 	{
 		std::string workDir;
 #if _WIN32
-		DWORD sz = GetCurrentDirectoryW(0, nullptr);
+		const DWORD sz = GetCurrentDirectoryW(0, nullptr);
 		std::vector<wchar_t> buffer(sz);
 		GetCurrentDirectory(sz, &buffer[0]);
 		workDir = ToUtf8String(&buffer[0]);
@@ -52,7 +52,7 @@ namespace saba
 	{
 #if _WIN32
 		std::vector<wchar_t> modulePath(MAX_PATH);
-		if (GetModuleFileNameW(NULL, modulePath.data(), (DWORD)modulePath.size()) == 0)
+		if (GetModuleFileNameW(nullptr, modulePath.data(), static_cast<DWORD>(modulePath.size())) == 0)
 		{
 			return "";
 		}
@@ -89,7 +89,7 @@ namespace saba
 		{
 			if (!part.empty())
 			{
-				auto pos = part.find_last_not_of(PathDelimiters);
+				const auto pos = part.find_last_not_of(PathDelimiters);
 				if (pos != std::string::npos)
 				{
 					if (!result.empty())
@@ -110,7 +110,7 @@ namespace saba
 
 	std::string PathUtil::GetDirectoryName(const std::string & path)
 	{
-		auto pos = path.find_last_of(PathDelimiters);
+		const auto pos = path.find_last_of(PathDelimiters);
 		if (pos == std::string::npos)
 		{
 			return "";
@@ -121,7 +121,7 @@ namespace saba
 
 	std::string PathUtil::GetFilename(const std::string & path)
 	{
-		auto pos = path.find_last_of(PathDelimiters);
+		const auto pos = path.find_last_of(PathDelimiters);
 		if (pos == std::string::npos)
 		{
 			return path;
@@ -133,7 +133,7 @@ namespace saba
 	std::string PathUtil::GetFilenameWithoutExt(const std::string & path)
 	{
 		const std::string filename = GetFilename(path);
-		auto pos = filename.find_last_of('.');
+		const auto pos = filename.find_last_of('.');
 		if (pos == std::string::npos)
 		{
 			return filename;
@@ -144,7 +144,7 @@ namespace saba
 
 	std::string PathUtil::GetExt(const std::string & path)
 	{
-		auto pos = path.find_last_of('.');
+		const auto pos = path.find_last_of('.');
 		if (pos == std::string::npos)
 		{
 			return "";
@@ -153,7 +153,7 @@ namespace saba
 		std::string ext = path.substr(pos + 1, path.size() - pos);
 		for (auto& ch : ext)
 		{
-			ch = (char)tolower(ch);
+			ch = static_cast<char>(tolower(ch));
 		}
 		return ext;
 	}

@@ -7,9 +7,7 @@
 #define SABA_MODEL_MMD_MMDNODE_H_
 
 #include <string>
-#include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/mat4x4.hpp>
 
 namespace saba
 {
@@ -17,6 +15,7 @@ namespace saba
 	{
 	public:
 		MMDNode();
+		virtual ~MMDNode() = default;
 
 		void AddChild(MMDNode* child);
 		// アニメーションの前後て呼ぶ
@@ -25,15 +24,15 @@ namespace saba
 
 		void UpdateLocalTransform();
 		void UpdateGlobalTransform();
-		void UpdateChildTransform();
+		void UpdateChildTransform() const;
 
-		void SetIndex(uint32_t idx) { m_index = idx; }
+		void SetIndex(const uint32_t idx) { m_index = idx; }
 		uint32_t GetIndex() const { return m_index; }
 
 		void SetName(const std::string& name) { m_name = name; }
 		const std::string& GetName() const { return m_name; }
 
-		void EnableIK(bool enable) { m_enableIK = enable; }
+		void EnableIK(const bool enable) { m_enableIK = enable; }
 		bool IsIK() const { return m_enableIK; }
 
 		void SetTranslate(const glm::vec3& t) { m_translate = t; }
@@ -46,7 +45,7 @@ namespace saba
 		const glm::vec3& GetScale() const { return m_scale; }
 
 		void SetAnimationTranslate(const glm::vec3& t) { m_animTranslate = t; }
-		const glm::vec3& GetAnimationTranslate() const { return m_animTranslate; };
+		const glm::vec3& GetAnimationTranslate() const { return m_animTranslate; }
 
 		void SetAnimationRotate(const glm::quat& q) { m_animRotate = q; }
 		const glm::quat& GetAnimationRotate() const { return m_animRotate; }
@@ -108,7 +107,7 @@ namespace saba
 			m_baseAnimRotate = glm::quat(1, 0, 0, 0);
 		}
 
-		const glm::vec3& GetBaseAnimationTranslate() const { return m_baseAnimTranslate; };
+		const glm::vec3& GetBaseAnimationTranslate() const { return m_baseAnimTranslate; }
 		const glm::quat& GetBaseAnimationRotate() const { return m_baseAnimRotate; }
 
 	protected:
@@ -116,7 +115,6 @@ namespace saba
 		virtual void OnEndUpdateTransfrom();
 		virtual void OnUpdateLocalTransform();
 
-	protected:
 		uint32_t		m_index;
 		std::string		m_name;
 		bool			m_enableIK;

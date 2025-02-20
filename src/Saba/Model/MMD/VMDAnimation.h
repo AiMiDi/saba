@@ -14,7 +14,6 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
-#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -91,7 +90,7 @@ namespace saba
 		VMDMorphController();
 
 		void SetBlendKeyShape(MMDMorph* morph);
-		void Evaluate(float t, float weight = 1.0f);
+		void Evaluate(float t, float animWeight = 1.0f);
 
 		void AddKey(const KeyType& key)
 		{
@@ -138,20 +137,19 @@ namespace saba
 	public:
 		VMDAnimation();
 
-		bool Create(std::shared_ptr<MMDModel> model);
+		bool Create(const std::shared_ptr<MMDModel>& model);
 		bool Add(const VMDFile& vmd);
 		void Destroy();
 
-		void Evaluate(float t, float weight = 1.0f);
+		void Evaluate(float t, float weight = 1.0f) const;
 
 		// Physics を同期させる
-		void SyncPhysics(float t, int frameCount = 30);
+		void SyncPhysics(float t, int frameCount = 30) const;
 
-		int32_t GetMaxKeyTime() const { return m_maxKeyTime; };
+		int32_t GetMaxKeyTime() const { return m_maxKeyTime; }
 	private:
 		int32_t CalculateMaxKeyTime() const;
 
-	private:
 		using NodeControllerPtr = std::unique_ptr<VMDNodeController>;
 		using IKControllerPtr = std::unique_ptr<VMDIKController>;
 		using MorphControllerPtr = std::unique_ptr<VMDMorphController>;

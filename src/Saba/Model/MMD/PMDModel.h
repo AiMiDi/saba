@@ -9,21 +9,17 @@
 #include "MMDMaterial.h"
 #include "MMDModel.h"
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
 #include <vector>
 #include <string>
-#include <algorithm>
 
 namespace saba
 {
-	class PMDModel : public MMDModel
+	class PMDModel final : public MMDModel
 	{
 	public:
 		MMDNodeManager* GetNodeManager() override { return &m_nodeMan; }
 		MMDIKManager* GetIKManager() override { return &m_ikSolverMan; }
-		MMDMorphManager* GetMorphManager() override { return &m_morphMan; };
+		MMDMorphManager* GetMorphManager() override { return &m_morphMan; }
 		MMDPhysicsManager* GetPhysicsManager() override { return &m_physicsMan; }
 
 		size_t GetVertexCount() const override { return m_positions.size(); }
@@ -67,8 +63,6 @@ namespace saba
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
-	protected:
-
 	private:
 		struct MorphVertex
 		{
@@ -82,7 +76,6 @@ namespace saba
 			std::vector<MorphVertex>	m_vertices;
 		};
 
-	private:
 		std::vector<glm::vec3>	m_positions;
 		std::vector<glm::vec3>	m_normals;
 		std::vector<glm::vec2>	m_uvs;

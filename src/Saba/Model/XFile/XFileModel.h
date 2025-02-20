@@ -10,9 +10,6 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 
 namespace saba
@@ -69,28 +66,26 @@ namespace saba
 			Frame*		m_next;
 		};
 
-	public:
 		bool Load(const char* filepath);
 		void Destroy();
 
 		size_t GetFrameCount() const { return m_frames.size(); }
-		const Frame* GetFrame(size_t i) const { return m_frames[i].get(); }
+		const Frame* GetFrame(const size_t i) const { return m_frames[i].get(); }
 
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
 	private:
-		void UpdateGlobalTransform(Frame* frame);
+		static void UpdateGlobalTransform(Frame* frame);
 
-	private:
 		using MeshUPtr = std::unique_ptr<Mesh>;
 		using FrameUPtr = std::unique_ptr<Frame>;
 
 		std::vector<MeshUPtr>	m_meshes;
 		std::vector<FrameUPtr>	m_frames;
 
-		glm::vec3		m_bboxMin;
-		glm::vec3		m_bboxMax;
+		glm::vec3		m_bboxMin{};
+		glm::vec3		m_bboxMax{};
 
 	};
 }

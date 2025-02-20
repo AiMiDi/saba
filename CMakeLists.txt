@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.0)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(saba)
@@ -28,12 +28,12 @@ if (SABA_ENABLE_EXAMPLE_VULKAN)
     find_package(Vulkan REQUIRED)
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${BULLET_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/external/stb/include)
-include_directories(${PROJECT_SOURCE_DIR}/external/glm/include)
+include_directories(${PROJECT_SOURCE_DIR}/external/glm)
 include_directories(${PROJECT_SOURCE_DIR}/external/gli/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
 
@@ -57,6 +57,8 @@ endif()
 # Install
 if (SABA_INSTALL)
     install (DIRECTORY src/Saba DESTINATION include  FILES_MATCHING PATTERN "*.h")
+    # copy glm to include
+    install (DIRECTORY external/glm/glm DESTINATION include)
     if (SABA_BUILD_MMD2OBJ)
         install (TARGETS mmd2obj RUNTIME DESTINATION bin)
     endif()

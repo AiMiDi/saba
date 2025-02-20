@@ -39,7 +39,7 @@ namespace saba
 		{
 			return false;
 		}
-		auto err = _wfopen_s(&m_fp, wFilepath.c_str(), wMode.c_str());
+		const auto err = _wfopen_s(&m_fp, wFilepath.c_str(), wMode.c_str());
 		if (err != 0)
 		{
 			return false;
@@ -96,7 +96,7 @@ namespace saba
 		}
 	}
 
-	bool File::IsOpen()
+	bool File::IsOpen() const
 	{
 		return m_fp != nullptr;
 	}
@@ -116,7 +116,7 @@ namespace saba
 		m_badFlag = false;
 	}
 
-	bool File::IsEOF()
+	bool File::IsEOF() const
 	{
 		return feof(m_fp) != 0;
 	}
@@ -135,7 +135,7 @@ namespace saba
 
 		buffer->resize(m_fileSize);
 		Seek(0, SeekDir::Begin);
-		if (!Read((*buffer).data(), m_fileSize))
+		if (!Read(buffer->data(), m_fileSize))
 		{
 			return false;
 		}
@@ -152,7 +152,7 @@ namespace saba
 
 		buffer->resize(m_fileSize);
 		Seek(0, SeekDir::Begin);
-		if (!Read((*buffer).data(), m_fileSize))
+		if (!Read(buffer->data(), m_fileSize))
 		{
 			return false;
 		}
@@ -168,7 +168,7 @@ namespace saba
 
 		buffer->resize(m_fileSize);
 		Seek(0, SeekDir::Begin);
-		if (!Read((*buffer).data(), m_fileSize))
+		if (!Read(buffer->data(), m_fileSize))
 		{
 			return false;
 		}
@@ -176,7 +176,7 @@ namespace saba
 		return true;
 	}
 
-	bool File::Seek(Offset offset, SeekDir origin)
+	bool File::Seek(Offset offset, const SeekDir origin)
 	{
 		if (m_fp == nullptr)
 		{
@@ -220,7 +220,7 @@ namespace saba
 			return -1;
 		}
 #if _WIN32
-		return (Offset)_ftelli64(m_fp);
+		return _ftelli64(m_fp);
 #else // _WIN32
 		return (Offset)ftell(m_fp);
 #endif // _WIN32
@@ -264,12 +264,10 @@ namespace saba
 		}
 
 		std::string line;
-		auto outputIt = std::back_inserter(line);
-		int ch;
-		ch = fgetc(m_file.GetFilePointer());
+		int ch = fgetc(m_file.GetFilePointer());
 		while (ch != EOF && ch != '\r' && ch != '\n')
 		{
-			line.push_back(ch);
+			line.push_back(static_cast<char>(ch));
 			ch = fgetc(m_file.GetFilePointer());
 		}
 		if (ch != EOF)
@@ -317,7 +315,7 @@ namespace saba
 			int ch = fgetc(m_file.GetFilePointer());
 			while (ch != EOF)
 			{
-				all.push_back(ch);
+				all.push_back(static_cast<char>(ch));
 				ch = fgetc(m_file.GetFilePointer());
 			}
 		}

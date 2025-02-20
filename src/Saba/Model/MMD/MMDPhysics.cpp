@@ -27,16 +27,16 @@ namespace saba
 	{
 		glm::mat4 InvZ(const glm::mat4& m)
 		{
-			const glm::mat4 invZ = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1));
+			const glm::mat4 invZ = scale(glm::mat4(1), glm::vec3(1, 1, -1));
 			return invZ * m * invZ;
 		}
 	}
 
-	struct MMDFilterCallback : public btOverlapFilterCallback
+	struct MMDFilterCallback final : btOverlapFilterCallback
 	{
 		bool needBroadphaseCollision(btBroadphaseProxy* proxy0, btBroadphaseProxy* proxy1) const override
 		{
-			auto findIt = std::find_if(
+			const auto findIt = std::find_if(
 				m_nonFilterProxy.begin(),
 				m_nonFilterProxy.end(),
 				[proxy0, proxy1](const auto& x) {return x == proxy0 || x == proxy1; }
@@ -46,7 +46,7 @@ namespace saba
 				return true;
 			}
 			bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
-			collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
+			collides = collides && proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask;
 			return collides;
 		}
 
@@ -118,7 +118,7 @@ namespace saba
 		m_groundRB = nullptr;
 	}
 
-	void MMDPhysics::SetFPS(float fps)
+	void MMDPhysics::SetFPS(const float fps)
 	{
 		m_fps = fps;
 	}
@@ -128,7 +128,7 @@ namespace saba
 		return static_cast<float>(m_fps);
 	}
 
-	void MMDPhysics::SetMaxSubStepCount(int numSteps)
+	void MMDPhysics::SetMaxSubStepCount(const int numSteps)
 	{
 		m_maxSubStepCount = numSteps;
 	}
@@ -139,7 +139,7 @@ namespace saba
 	}
 
 
-	void MMDPhysics::Update(float time)
+	void MMDPhysics::Update(const float time) const
 	{
 		if (m_world != nullptr)
 		{
@@ -147,7 +147,7 @@ namespace saba
 		}
 	}
 
-	void MMDPhysics::AddRigidBody(MMDRigidBody * mmdRB)
+	void MMDPhysics::AddRigidBody(const MMDRigidBody * mmdRB) const
 	{
 		m_world->addRigidBody(
 			mmdRB->GetRigidBody(),
@@ -156,12 +156,12 @@ namespace saba
 		);
 	}
 
-	void MMDPhysics::RemoveRigidBody(MMDRigidBody * mmdRB)
+	void MMDPhysics::RemoveRigidBody(const MMDRigidBody * mmdRB) const
 	{
 		m_world->removeRigidBody(mmdRB->GetRigidBody());
 	}
 
-	void MMDPhysics::AddJoint(MMDJoint * mmdJoint)
+	void MMDPhysics::AddJoint(const MMDJoint * mmdJoint) const
 	{
 		if (mmdJoint->GetConstraint() != nullptr)
 		{
@@ -169,7 +169,7 @@ namespace saba
 		}
 	}
 
-	void MMDPhysics::RemoveJoint(MMDJoint * mmdJoint)
+	void MMDPhysics::RemoveJoint(const MMDJoint * mmdJoint) const
 	{
 		if (mmdJoint->GetConstraint() != nullptr)
 		{
@@ -186,10 +186,10 @@ namespace saba
 	// MMDRigidBody
 	//*******************
 
-	class DefaultMotionState : public MMDMotionState
+	class DefaultMotionState final : public MMDMotionState
 	{
 	public:
-		DefaultMotionState(const glm::mat4& transform)
+		explicit DefaultMotionState(const glm::mat4& transform)
 		{
 			glm::mat4 trans = InvZ(transform);
 			m_transform.setFromOpenGLMatrix(&trans[0][0]);
@@ -206,12 +206,12 @@ namespace saba
 			m_transform = worldTransform;
 		}
 
-		virtual void Reset() override
+		void Reset() override
 		{
 			m_transform = m_initialTransform;
 		}
 
-		virtual void ReflectGlobalTransform() override
+		void ReflectGlobalTransform() override
 		{
 		}
 
@@ -221,10 +221,10 @@ namespace saba
 		btTransform	m_transform;
 	};
 
-	class DynamicMotionState : public MMDMotionState
+	class DynamicMotionState final : public MMDMotionState
 	{
 	public:
-		DynamicMotionState(MMDNode* node, const glm::mat4& offset, bool override = true)
+		DynamicMotionState(MMDNode* node, const glm::mat4& offset, const bool override = true)
 			: m_node(node)
 			, m_offset(offset)
 			, m_override(override)
@@ -253,7 +253,7 @@ namespace saba
 		{
 			alignas(16) glm::mat4 world;
 			m_transform.getOpenGLMatrix(&world[0][0]);
-			glm::mat4 btGlobal = InvZ(world) * m_invOffset;
+			const glm::mat4 btGlobal = InvZ(world) * m_invOffset;
 
 			if (m_override)
 			{
@@ -265,15 +265,15 @@ namespace saba
 	private:
 		MMDNode*	m_node;
 		glm::mat4	m_offset;
-		glm::mat4	m_invOffset;
+		glm::mat4	m_invOffset{};
 		btTransform	m_transform;
 		bool		m_override;
 	};
 
-	class DynamicAndBoneMergeMotionState : public MMDMotionState
+	class DynamicAndBoneMergeMotionState final : public MMDMotionState
 	{
 	public:
-		DynamicAndBoneMergeMotionState(MMDNode* node, const glm::mat4& offset, bool override = true)
+		DynamicAndBoneMergeMotionState(MMDNode* node, const glm::mat4& offset, const bool override = true)
 			: m_node(node)
 			, m_offset(offset)
 			, m_override(override)
@@ -316,13 +316,13 @@ namespace saba
 	private:
 		MMDNode*	m_node;
 		glm::mat4	m_offset;
-		glm::mat4	m_invOffset;
+		glm::mat4	m_invOffset{};
 		btTransform	m_transform;
 		bool		m_override;
 
 	};
 
-	class KinematicMotionState : public MMDMotionState
+	class KinematicMotionState final : public MMDMotionState
 	{
 	public:
 		KinematicMotionState(MMDNode* node, const glm::mat4& offset)
@@ -367,14 +367,12 @@ namespace saba
 		: m_rigidBodyType(RigidBodyType::Kinematic)
 		, m_group(0)
 		, m_groupMask(0)
-		, m_node(0)
+		, m_node(nullptr)
 		, m_offsetMat(1)
 	{
 	}
 
-	MMDRigidBody::~MMDRigidBody()
-	{
-	}
+	MMDRigidBody::~MMDRigidBody() = default;
 
 	bool MMDRigidBody::Create(const PMDRigidBodyExt& pmdRigidBody, MMDModel* model, MMDNode* node)
 	{
@@ -417,22 +415,22 @@ namespace saba
 			m_shape->calculateLocalInertia(mass, localInteria);
 		}
 
-		auto rx = glm::rotate(glm::mat4(1), pmdRigidBody.m_rot.x, glm::vec3(1, 0, 0));
-		auto ry = glm::rotate(glm::mat4(1), pmdRigidBody.m_rot.y, glm::vec3(0, 1, 0));
-		auto rz = glm::rotate(glm::mat4(1), pmdRigidBody.m_rot.z, glm::vec3(0, 0, 1));
-		glm::mat4 rotMat = ry * rx * rz;
-		glm::mat4 translateMat = glm::translate(glm::mat4(1), pmdRigidBody.m_pos);
+		const auto rx = rotate(glm::mat4(1), pmdRigidBody.m_rot.x, glm::vec3(1, 0, 0));
+		const auto ry = rotate(glm::mat4(1), pmdRigidBody.m_rot.y, glm::vec3(0, 1, 0));
+		const auto rz = rotate(glm::mat4(1), pmdRigidBody.m_rot.z, glm::vec3(0, 0, 1));
+		const glm::mat4 rotMat = ry * rx * rz;
+		const glm::mat4 translateMat = translate(glm::mat4(1), pmdRigidBody.m_pos);
 
 		glm::mat4 rbMat = translateMat * rotMat;
 		if (node != nullptr)
 		{
-			glm::mat4 global = node->GetGlobalTransform();
+			const glm::mat4 global = node->GetGlobalTransform();
 			rbMat = InvZ(global) * rbMat;
 		}
 		else
 		{
-			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
-			glm::mat4 global = root->GetGlobalTransform();
+			const MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
+			const glm::mat4 global = root->GetGlobalTransform();
 			rbMat = InvZ(global) * rbMat;
 		}
 		rbMat = InvZ(rbMat);
@@ -443,7 +441,7 @@ namespace saba
 		}
 		else
 		{
-			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
+			const MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
 			m_offsetMat = glm::inverse(root->GetGlobalTransform()) * rbMat;
 		}
 
@@ -493,7 +491,7 @@ namespace saba
 			m_rigidBody->setCollisionFlags(m_rigidBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 		}
 
-		m_rigidBodyType = (RigidBodyType)pmdRigidBody.m_rigidBodyType;
+		m_rigidBodyType = static_cast<RigidBodyType>(pmdRigidBody.m_rigidBodyType);
 		m_group = pmdRigidBody.m_groupIndex;
 		m_groupMask = pmdRigidBody.m_groupTarget;
 		m_node = node;
@@ -543,13 +541,13 @@ namespace saba
 			m_shape->calculateLocalInertia(mass, localInteria);
 		}
 
-		auto rx = glm::rotate(glm::mat4(1), pmxRigidBody.m_rotate.x, glm::vec3(1, 0, 0));
-		auto ry = glm::rotate(glm::mat4(1), pmxRigidBody.m_rotate.y, glm::vec3(0, 1, 0));
-		auto rz = glm::rotate(glm::mat4(1), pmxRigidBody.m_rotate.z, glm::vec3(0, 0, 1));
-		glm::mat4 rotMat = ry * rx * rz;
-		glm::mat4 translateMat = glm::translate(glm::mat4(1), pmxRigidBody.m_translate);
+		const auto rx = rotate(glm::mat4(1), pmxRigidBody.m_rotate.x, glm::vec3(1, 0, 0));
+		const auto ry = rotate(glm::mat4(1), pmxRigidBody.m_rotate.y, glm::vec3(0, 1, 0));
+		const auto rz = rotate(glm::mat4(1), pmxRigidBody.m_rotate.z, glm::vec3(0, 0, 1));
+		const glm::mat4 rotMat = ry * rx * rz;
+		const glm::mat4 translateMat = translate(glm::mat4(1), pmxRigidBody.m_translate);
 
-		glm::mat4 rbMat = InvZ(translateMat * rotMat);
+		const glm::mat4 rbMat = InvZ(translateMat * rotMat);
 
 		MMDNode* kinematicNode = nullptr;
 		if (node != nullptr)
@@ -611,7 +609,7 @@ namespace saba
 			m_rigidBody->setCollisionFlags(m_rigidBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 		}
 
-		m_rigidBodyType = (RigidBodyType)pmxRigidBody.m_op;
+		m_rigidBodyType = static_cast<RigidBodyType>(pmxRigidBody.m_op);
 		m_group = pmxRigidBody.m_group;
 		m_groupMask = pmxRigidBody.m_collisionGroup;
 		m_node = node;
@@ -640,7 +638,7 @@ namespace saba
 		return m_groupMask;
 	}
 
-	void MMDRigidBody::SetActivation(bool activation)
+	void MMDRigidBody::SetActivation(const bool activation) const
 	{
 		if (m_rigidBodyType != RigidBodyType::Kinematic)
 		{
@@ -661,7 +659,7 @@ namespace saba
 		}
 	}
 
-	void MMDRigidBody::ResetTransform()
+	void MMDRigidBody::ResetTransform() const
 	{
 		if (m_activeMotionState != nullptr)
 		{
@@ -669,12 +667,11 @@ namespace saba
 		}
 	}
 
-	void MMDRigidBody::Reset(MMDPhysics* physics)
+	void MMDRigidBody::Reset(const MMDPhysics* physics) const
 	{
-		auto cache = physics->GetDynamicsWorld()->getPairCache();
-		if (cache != nullptr)
+		if (const auto cache = physics->GetDynamicsWorld()->getPairCache(); cache != nullptr)
 		{
-			auto dispatcher = physics->GetDynamicsWorld()->getDispatcher();
+			const auto dispatcher = physics->GetDynamicsWorld()->getDispatcher();
 			cache->cleanProxyFromPairs(m_rigidBody->getBroadphaseHandle(), dispatcher);
 		}
 		m_rigidBody->setAngularVelocity(btVector3(0, 0, 0));
@@ -682,7 +679,7 @@ namespace saba
 		m_rigidBody->clearForces();
 	}
 
-	void MMDRigidBody::ReflectGlobalTransform()
+	void MMDRigidBody::ReflectGlobalTransform() const
 	{
 		if (m_activeMotionState != nullptr)
 		{
@@ -694,14 +691,13 @@ namespace saba
 		}
 	}
 
-	void MMDRigidBody::CalcLocalTransform()
+	void MMDRigidBody::CalcLocalTransform() const
 	{
 		if (m_node != nullptr)
 		{
-			auto parent = m_node->GetParent();
-			if (parent != nullptr)
+			if (const auto parent = m_node->GetParent(); parent != nullptr)
 			{
-				auto local = glm::inverse(parent->GetGlobalTransform()) * m_node->GetGlobalTransform();
+				const auto local = glm::inverse(parent->GetGlobalTransform()) * m_node->GetGlobalTransform();
 				m_node->SetLocalTransform(local);
 			}
 			else
@@ -711,9 +707,9 @@ namespace saba
 		}
 	}
 
-	glm::mat4 MMDRigidBody::GetTransform()
+	glm::mat4 MMDRigidBody::GetTransform() const
 	{
-		btTransform transform = m_rigidBody->getCenterOfMassTransform();
+		const btTransform transform = m_rigidBody->getCenterOfMassTransform();
 		alignas(16) glm::mat4 mat;
 		transform.getOpenGLMatrix(&mat[0][0]);
 		return InvZ(mat);
@@ -723,15 +719,10 @@ namespace saba
 	//*******************
 	// MMDJoint
 	//*******************
-	MMDJoint::MMDJoint()
-	{
-	}
+	MMDJoint::MMDJoint() = default;
+	MMDJoint::~MMDJoint() = default;
 
-	MMDJoint::~MMDJoint()
-	{
-	}
-
-	bool MMDJoint::CreateJoint(const PMDJointExt& pmdJoint, MMDRigidBody* rigidBodyA, MMDRigidBody* rigidBodyB)
+	bool MMDJoint::CreateJoint(const PMDJointExt& pmdJoint, const MMDRigidBody* rigidBodyA, const MMDRigidBody* rigidBodyB)
 	{
 		Destroy();
 
@@ -816,7 +807,7 @@ namespace saba
 		return true;
 	}
 
-	bool MMDJoint::CreateJoint(const PMXJoint& pmxJoint, MMDRigidBody* rigidBodyA, MMDRigidBody* rigidBodyB)
+	bool MMDJoint::CreateJoint(const PMXJoint& pmxJoint, const MMDRigidBody* rigidBodyA, const MMDRigidBody* rigidBodyB)
 	{
 		Destroy();
 

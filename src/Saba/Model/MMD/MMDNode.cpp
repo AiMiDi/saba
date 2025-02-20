@@ -3,10 +3,9 @@
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 //
 
+#include <stack>
 #include "MMDNode.h"
-
 #include <Saba/Base/Log.h>
-
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace saba
@@ -55,7 +54,7 @@ namespace saba
 		}
 		else
 		{
-			auto lastNode = m_child->m_prev;
+			const auto lastNode = m_child->m_prev;
 			lastNode->m_next = child;
 			child->m_prev = lastNode;
 
@@ -80,25 +79,35 @@ namespace saba
 		OnUpdateLocalTransform();
 	}
 
-	void MMDNode::UpdateGlobalTransform()
+void MMDNode::UpdateGlobalTransform()
+{
+	std::stack<MMDNode*> nodeStack;
+	nodeStack.push(this);
+
+	while (!nodeStack.empty())
 	{
-		if (m_parent == nullptr)
+		MMDNode* currentNode = nodeStack.top();
+		nodeStack.pop();
+
+		if (currentNode->m_parent == nullptr)
 		{
-			m_global = m_local;
+			currentNode->m_global = currentNode->m_local;
 		}
 		else
 		{
-			m_global = m_parent->m_global * m_local;
+			currentNode->m_global = currentNode->m_parent->m_global * currentNode->m_local;
 		}
-		MMDNode* child = m_child;
+
+		MMDNode* child = currentNode->m_child;
 		while (child != nullptr)
 		{
-			child->UpdateGlobalTransform();
+			nodeStack.push(child);
 			child = child->m_next;
 		}
 	}
+}
 
-	void MMDNode::UpdateChildTransform()
+	void MMDNode::UpdateChildTransform() const
 	{
 		MMDNode* child = m_child;
 		while (child != nullptr)
@@ -110,7 +119,7 @@ namespace saba
 
 	void MMDNode::CalculateInverseInitTransform()
 	{
-		m_inverseInit = glm::inverse(m_global);
+		m_inverseInit = inverse(m_global);
 	}
 
 	void MMDNode::OnBeginUpdateTransform()
@@ -123,12 +132,12 @@ namespace saba
 
 	void MMDNode::OnUpdateLocalTransform()
 	{
-		auto s = glm::scale(glm::mat4(1), GetScale());
-		auto r = glm::mat4_cast(AnimateRotate());
-		auto t = glm::translate(glm::mat4(1), AnimateTranslate());
+		const auto s = scale(glm::mat4(1), GetScale());
+		auto r = mat4_cast(AnimateRotate());
+		const auto t = translate(glm::mat4(1), AnimateTranslate());
 		if (m_enableIK)
 		{
-			r = glm::mat4_cast(m_ikRotate) * r;
+			r = mat4_cast(m_ikRotate) * r;
 		}
 		m_local = t * r * s;
 	}

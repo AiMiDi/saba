@@ -1,13 +1,3 @@
-# Example
-
-[mmd2obj.cpp](saba/mmd2obj.cpp) is a simple sample.
-
-[simple_mmd_viewer_glfw.cpp](saba/example/simple_mmd_viewer_glfw.cpp) is a OpenGL sample.
-
-[simple_mmd_viewer_dx11.cpp](saba/example/simple_mmd_viewer_dx11.cpp) is a DirectX 11 sample.
-
-[simple_mmd_viewer_vulkan.cpp](saba/example/simple_mmd_viewer_vulkan.cpp) is a Vulkan sample.
-
 ## Path
 
 Saba uses UTF-8 as the path string.

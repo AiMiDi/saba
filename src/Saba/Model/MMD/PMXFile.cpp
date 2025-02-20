@@ -28,7 +28,7 @@ namespace saba
 			return file.Read(valArray, size);
 		}
 
-		bool ReadString(PMXFile* pmx, std::string* val, File& file)
+		bool ReadString(const PMXFile* pmx, std::string* val, File& file)
 		{
 			uint32_t bufSize;
 			if (!Read(&bufSize, file))
@@ -64,7 +64,7 @@ namespace saba
 			return !file.IsBad();
 		}
 
-		bool ReadIndex(int32_t* index, uint8_t indexSize, File& file)
+		bool ReadIndex(int32_t* index, const uint8_t indexSize, File& file)
 		{
 			switch (indexSize)
 			{
@@ -74,7 +74,7 @@ namespace saba
 				Read(&idx, file);
 				if (idx != 0xFF)
 				{
-					*index = (int32_t)idx;
+					*index = static_cast<int32_t>(idx);
 				}
 				else
 				{
@@ -88,7 +88,7 @@ namespace saba
 				Read(&idx, file);
 				if (idx != 0xFFFF)
 				{
-					*index = (int32_t)idx;
+					*index = static_cast<int32_t>(idx);
 				}
 				else
 				{
@@ -100,7 +100,7 @@ namespace saba
 			{
 				uint32_t idx;
 				Read(&idx, file);
-				*index = (int32_t)idx;
+				*index = static_cast<int32_t>(idx);
 			}
 				break;
 			default:
@@ -325,7 +325,7 @@ namespace saba
 				{
 					uint8_t toonIndex;
 					Read(&toonIndex, file);
-					mat.m_toonTextureIndex = (int32_t)toonIndex;
+					mat.m_toonTextureIndex = static_cast<int32_t>(toonIndex);
 				}
 				else
 				{
@@ -361,7 +361,7 @@ namespace saba
 
 				Read(&bone.m_boneFlag, file);
 
-				if (((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::TargetShowMode) == 0)
+				if ((static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::TargetShowMode)) == 0)
 				{
 					Read(&bone.m_positionOffset, file);
 				}
@@ -370,30 +370,30 @@ namespace saba
 					ReadIndex(&bone.m_linkBoneIndex, pmx->m_header.m_boneIndexSize, file);
 				}
 
-				if (((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendRotate) ||
-					((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendTranslate))
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::AppendRotate) ||
+					static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::AppendTranslate))
 				{
 					ReadIndex(&bone.m_appendBoneIndex, pmx->m_header.m_boneIndexSize, file);
 					Read(&bone.m_appendWeight, file);
 				}
 
-				if ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::FixedAxis)
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::FixedAxis))
 				{
 					Read(&bone.m_fixedAxis, file);
 				}
 
-				if ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::LocalAxis)
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::LocalAxis))
 				{
 					Read(&bone.m_localXAxis, file);
 					Read(&bone.m_localZAxis, file);
 				}
 
-				if ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::DeformOuterParent)
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::DeformOuterParent))
 				{
 					Read(&bone.m_keyValue, file);
 				}
 
-				if ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::IK)
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::IK))
 				{
 					ReadIndex(&bone.m_ikTargetBoneIndex, pmx->m_header.m_boneIndexSize, file);
 					Read(&bone.m_ikIterationCount, file);
@@ -529,7 +529,7 @@ namespace saba
 				}
 				else
 				{
-					SABA_ERROR("Unsupported Morph Type:[{}]", (int)morph.m_morphType);
+					SABA_ERROR("Unsupported Morph Type:[{}]", static_cast<int>(morph.m_morphType));
 					return false;
 				}
 			}

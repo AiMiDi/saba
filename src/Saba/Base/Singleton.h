@@ -16,7 +16,7 @@ namespace saba
 	public:
 		using FinalizerFunc = std::function<void()>;
 
-		static void AddFinalizer(FinalizerFunc finalizer);
+		static void AddFinalizer(const FinalizerFunc& finalizer);
 		static void Finalize();
 	};
 
@@ -34,7 +34,7 @@ namespace saba
 		static void Create()
 		{
 			m_instance = new T();
-			SingletonFinalizer::AddFinalizer(&Singleton<T>::Destroy);
+			SingletonFinalizer::AddFinalizer(&Singleton::Destroy);
 		}
 
 		static void Destroy()
@@ -43,7 +43,6 @@ namespace saba
 			m_instance = nullptr;
 		}
 
-	private:
 		static std::once_flag	m_initFlag;
 		static T*				m_instance;
 	};

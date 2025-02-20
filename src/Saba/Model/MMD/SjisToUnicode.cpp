@@ -11,20 +11,20 @@
 
 namespace
 {
-	const int ASCIIBegin = 0x00;
-	const int ASCIIEnd = 0x7E;
+	constexpr int ASCIIBegin = 0x00;
+	constexpr int ASCIIEnd = 0x7E;
 
-	const int HankakuBegin = 0xA1;
-	const int HankakuEnd = 0xDF;
+	constexpr int HankakuBegin = 0xA1;
+	constexpr int HankakuEnd = 0xDF;
 
-	const int SjisFirstBegin1 = 0x81;
-	const int SjisFirstEnd1 = 0x9F;
+	constexpr int SjisFirstBegin1 = 0x81;
+	constexpr int SjisFirstEnd1 = 0x9F;
 
-	const int SjisFirstBegin2 = 0xE0;
-	const int SjisFirstEnd2 = 0xEF;
+	constexpr int SjisFirstBegin2 = 0xE0;
+	constexpr int SjisFirstEnd2 = 0xEF;
 
-	const int SjisSecondBegin = 0x40;
-	const int SjisSecondEnd = 0xFC;
+	constexpr int SjisSecondBegin = 0x40;
+	constexpr int SjisSecondEnd = 0xFC;
 
 	const uint16_t AsciiTable[] =
 	{
@@ -9215,81 +9215,67 @@ namespace
 
 namespace saba
 {
-	static bool IsAscii(int ch)
+	static bool IsAscii(const int ch)
 	{
-		return (ASCIIBegin <= ch && ch <= ASCIIEnd);
+		return ASCIIBegin <= ch && ch <= ASCIIEnd;
 	}
 
-	static bool IsSjisHankaku(int ch)
+	static bool IsSjisHankaku(const int ch)
 	{
-		return (HankakuBegin <= ch && ch <= HankakuEnd);
+		return HankakuBegin <= ch && ch <= HankakuEnd;
 	}
 
-	static bool IsSjis1ByteChar(int ch)
+	static bool IsSjis1stByte1(const int code1)
 	{
-		return IsAscii(ch) || IsSjisHankaku(ch);
+		return SjisFirstBegin1 <= code1 && code1 <= SjisFirstEnd1;
 	}
 
-	static bool IsSjis1stByte1(int code1)
+	static bool IsSjis1stByte2(const int code1)
 	{
-		return (SjisFirstBegin1 <= code1 && code1 <= SjisFirstEnd1);
+		return SjisFirstBegin2 <= code1 && code1 <= SjisFirstEnd2;
 	}
 
-	static bool IsSjis1stByte2(int code1)
+	static bool IsSjis2ndByte(const int code2)
 	{
-		return (SjisFirstBegin2 <= code1 && code1 <= SjisFirstEnd2);
+		return SjisSecondBegin <= code2 && code2 <= SjisSecondEnd;
 	}
 
-	static bool IsSjis2ndByte(int code2)
-	{
-		return (SjisSecondBegin <= code2 && code2 <= SjisSecondEnd);
-	}
-
-	static std::tuple<char16_t, uint8_t> ConvertSjisToU16Char(int ch1, int ch2)
+	static std::tuple<char16_t, uint8_t> ConvertSjisToU16Char(const int ch1, const int ch2)
 	{
 		if (IsAscii(ch1))
 		{
-			return std::make_tuple(char16_t(AsciiTable[ch1]), 1);
+			return std::make_tuple(static_cast<char16_t>(AsciiTable[ch1]), 1);
 		}
-		else if (IsSjisHankaku(ch1))
+		if (IsSjisHankaku(ch1))
 		{
-			return std::make_tuple(char16_t(HankakuTable[ch1 - HankakuBegin]), 1);
+			return std::make_tuple(static_cast<char16_t>(HankakuTable[ch1 - HankakuBegin]), 1);
 		}
-		else
+		int code1 = ch1;
+		int code2 = ch2;
+		if (IsSjis1stByte1(code1) && IsSjis2ndByte(code2))
 		{
-			int code1 = ch1;
-			int code2 = ch2;
-			if (IsSjis1stByte1(code1) && IsSjis2ndByte(code2))
-			{
-				code1 -= SjisFirstBegin1;
-				code2 -= SjisSecondBegin;
-				return std::make_tuple(char16_t(SjisTable1[code1][code2]), 2);
-			}
-			else if (IsSjis1stByte2(code1) && IsSjis2ndByte(code2))
-			{
-				code1 -= SjisFirstBegin2;
-				code2 -= SjisSecondBegin;
-				return std::make_tuple(char16_t(SjisTable2[code1][code2]), 2);
-			}
-			else
-			{
-				return std::make_tuple(char16_t(0xFFFF), 1);
-			}
+			code1 -= SjisFirstBegin1;
+			code2 -= SjisSecondBegin;
+			return std::make_tuple(static_cast<char16_t>(SjisTable1[code1][code2]), 2);
 		}
+		if (IsSjis1stByte2(code1) && IsSjis2ndByte(code2))
+		{
+			code1 -= SjisFirstBegin2;
+			code2 -= SjisSecondBegin;
+			return std::make_tuple(static_cast<char16_t>(SjisTable2[code1][code2]), 2);
+		}
+		return std::make_tuple(static_cast<char16_t>(0xFFFF), 1);
 	}
 
-	char16_t ConvertSjisToU16Char(int ch)
+	char16_t ConvertSjisToU16Char(const int ch)
 	{
 		if (ch <= 255)
 		{
-			auto ret = ConvertSjisToU16Char(ch, 0);
+			const auto ret = ConvertSjisToU16Char(ch, 0);
 			return std::get<0>(ret);
 		}
-		else
-		{
-			auto ret = ConvertSjisToU16Char(int((uint16_t(ch) >> 8) & 0xFF), int(uint16_t(ch) & 0xFF));
-			return std::get<0>(ret);
-		}
+		const auto ret = ConvertSjisToU16Char(static_cast<uint16_t>(ch) >> 8 & 0xFF, static_cast<uint16_t>(ch) & 0xFF);
+		return std::get<0>(ret);
 	}
 
 	template <typename CharT>
@@ -9304,7 +9290,7 @@ namespace saba
 		auto sjisChar = sjisCode;
 		while (*sjisChar != 0)
 		{
-			auto ret = ConvertSjisToU16Char(uint8_t(*sjisChar), uint8_t(*(sjisChar + 1)));
+			auto ret = ConvertSjisToU16Char(static_cast<uint8_t>(*sjisChar), static_cast<uint8_t>(*(sjisChar + 1)));
 			chCount += 1;
 			sjisChar += std::get<1>(ret);
 		}
@@ -9314,7 +9300,7 @@ namespace saba
 		auto unicodeData = unicodeStr.begin();
 		while (*sjisChar != 0)
 		{
-			auto ret = ConvertSjisToU16Char(uint8_t(*sjisChar), uint8_t(*(sjisChar + 1)));
+			auto ret = ConvertSjisToU16Char(static_cast<uint8_t>(*sjisChar), static_cast<uint8_t>(*(sjisChar + 1)));
 			auto unicode = std::get<0>(ret);
 			if (unicode == 0xFFFF)
 			{

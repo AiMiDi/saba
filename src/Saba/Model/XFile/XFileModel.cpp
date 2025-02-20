@@ -17,7 +17,7 @@ namespace saba
 	{
 		glm::mat4 InvZ(const glm::mat4& m)
 		{
-			const glm::mat4 invZ = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1));
+			const glm::mat4 invZ = scale(glm::mat4(1), glm::vec3(1, 1, -1));
 			return invZ * m * invZ;
 		}
 	}
@@ -51,7 +51,7 @@ namespace saba
 		std::map<tinyxfile::Frame*, Frame*>	fromXFrameMap;
 		for (const auto& xfileFrame : xfile.m_frames)
 		{
-			FrameUPtr newFrame = std::make_unique<Frame>();
+			auto newFrame = std::make_unique<Frame>();
 			Frame* frame = newFrame.get();
 			m_frames.emplace_back(std::move(newFrame));
 
@@ -103,7 +103,7 @@ namespace saba
 					return false;
 				}
 
-				MeshUPtr newMesh = std::make_unique<Mesh>();
+				auto newMesh = std::make_unique<Mesh>();
 				Mesh* mesh = newMesh.get();
 				m_meshes.emplace_back(std::move(newMesh));
 				frame->m_mesh = mesh;
@@ -118,8 +118,8 @@ namespace saba
 				{
 					auto pos = glm::vec3(xfilePos.x, xfilePos.y, -xfilePos.z) * 10.0f;
 					mesh->m_positions.push_back(pos);
-					m_bboxMax = glm::max(m_bboxMax, pos);
-					m_bboxMin = glm::min(m_bboxMin, pos);
+					m_bboxMax = max(m_bboxMax, pos);
+					m_bboxMin = min(m_bboxMin, pos);
 				}
 
 				// normal

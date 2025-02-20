@@ -38,7 +38,7 @@ namespace saba
 		VMDCameraController();
 
 		void Evaluate(float t);
-		const MMDCamera& GetCamera() { return m_camera; }
+		const MMDCamera& GetCamera() const { return m_camera; }
 
 		void AddKey(const KeyType& key)
 		{

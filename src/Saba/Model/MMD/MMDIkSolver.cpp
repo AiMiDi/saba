@@ -21,39 +21,23 @@ namespace saba
 	{
 	}
 
-	void MMDIkSolver::AddIKChain(MMDNode * node, bool isKnee)
+	void MMDIkSolver::AddIKChain(MMDNode * node, const bool isKnee)
 	{
-		IKChain chain;
-		chain.m_node = node;
-		chain.m_enableAxisLimit = isKnee;
-		if (isKnee)
-		{
-			chain.m_limitMin = glm::vec3(glm::radians(0.5f), 0, 0);
-			chain.m_limitMax = glm::vec3(glm::radians(180.0f), 0, 0);
-		}
-		chain.m_saveIKRot = glm::quat(1, 0, 0, 0);
-		AddIKChain(std::move(chain));
+		m_chains.emplace_back(node,
+			isKnee,
+			isKnee ? glm::vec3(glm::radians(0.5f), 0, 0) : glm::vec3(0.0f),
+			isKnee ? glm::vec3(glm::radians(180.0f), 0, 0) : glm::vec3(0.0f),
+			glm::quat(1, 0, 0, 0));
 	}
 
 	void MMDIkSolver::AddIKChain(
 		MMDNode * node,
-		bool axisLimit,
-		const glm::vec3 & limixMin,
+		const bool axisLimit,
+		const glm::vec3 & limitMin,
 		const glm::vec3 & limitMax
 	)
 	{
-		IKChain chain;
-		chain.m_node = node;
-		chain.m_enableAxisLimit = axisLimit;
-		chain.m_limitMin = limixMin;
-		chain.m_limitMax = limitMax;
-		chain.m_saveIKRot = glm::quat(1, 0, 0, 0);
-		AddIKChain(std::move(chain));
-	}
-
-	void MMDIkSolver::AddIKChain(MMDIkSolver::IKChain&& chain)
-	{
-		m_chains.emplace_back(chain);
+		m_chains.emplace_back(node, axisLimit, limitMin, limitMax, glm::quat(1, 0, 0, 0));
 	}
 
 	void MMDIkSolver::Solve()
@@ -63,7 +47,7 @@ namespace saba
 			return;
 		}
 
-		if ((m_ikNode == nullptr) || (m_ikTarget == nullptr))
+		if (m_ikNode == nullptr || m_ikTarget == nullptr)
 		{
 			// wrong ik
 			return;
@@ -87,7 +71,7 @@ namespace saba
 
 			auto targetPos = glm::vec3(m_ikTarget->GetGlobalTransform()[3]);
 			auto ikPos = glm::vec3(m_ikNode->GetGlobalTransform()[3]);
-			float dist = glm::length(targetPos - ikPos);
+			const float dist = length(targetPos - ikPos);
 			if (dist < maxDist)
 			{
 				maxDist = dist;
@@ -111,7 +95,7 @@ namespace saba
 
 	namespace
 	{
-		float NormalizeAngle(float angle)
+		float NormalizeAngle(const float angle)
 		{
 			float ret = angle;
 			while (ret >= glm::two_pi<float>())
@@ -126,64 +110,26 @@ namespace saba
 			return ret;
 		}
 
-		float DiffAngle(float a, float b)
+		float DiffAngle(const float a, const float b)
 		{
-			float diff = NormalizeAngle(a) - NormalizeAngle(b);
+			const float diff = NormalizeAngle(a) - NormalizeAngle(b);
 			if (diff > glm::pi<float>())
 			{
 				return diff - glm::two_pi<float>();
 			}
-			else if (diff < -glm::pi<float>())
+			if (diff < -glm::pi<float>())
 			{
 				return diff + glm::two_pi<float>();
 			}
 			return diff;
 		}
 
-		float ClampAngle(float angle, float minAngle, float maxAngle)
-		{
-			if (minAngle == maxAngle)
-			{
-				return minAngle;
-			}
-
-			float ret = angle;
-			while (ret < minAngle)
-			{
-				ret += glm::two_pi<float>();
-			}
-			if (ret < maxAngle)
-			{
-				return ret;
-			}
-
-			while (ret > maxAngle)
-			{
-				ret -= glm::two_pi<float>();
-			}
-			if (ret > minAngle)
-			{
-				return ret;
-			}
-
-			float minDiff = std::abs(DiffAngle(minAngle, ret));
-			float maxDiff = std::abs(DiffAngle(maxAngle, ret));
-			if (minDiff < maxDiff)
-			{
-				return minAngle;
-			}
-			else
-			{
-				return maxAngle;
-			}
-		}
-
 		glm::vec3 Decompose(const glm::mat3& m, const glm::vec3& before)
 		{
 			glm::vec3 r;
 			float sy = -m[0][2];
-			const float e = 1.0e-6f;
-			if ((1.0f - std::abs(sy)) < e)
+			constexpr float e = 1.0e-6f;
+			if (1.0f - std::abs(sy) < e)
 			{
 				r.y = std::asin(sy);
 				// 180°に近いほうを探す
@@ -226,7 +172,7 @@ namespace saba
 				r.z = std::atan2(m[0][1], m[0][0]);
 			}
 
-			const float pi = glm::pi<float>();
+			constexpr auto pi = glm::pi<float>();
 			glm::vec3 tests[] =
 			{
 				{ r.x + pi, pi - r.y, r.z + pi },
@@ -255,34 +201,6 @@ namespace saba
 				}
 			}
 			return r;
-		}
-
-		glm::quat RotateFromTo(const glm::vec3& from, const glm::vec3& to)
-		{
-			auto const nf = glm::normalize(from);
-			auto const nt = glm::normalize(to);
-			auto const localW = glm::cross(nf, nt);
-			auto dot = glm::dot(nf, nt);
-			if (glm::abs(1.0f + dot) < 1.0e-7)
-			{
-				glm::vec3 v = glm::abs(from);
-				if (v.x < v.y)
-				{
-					if (v.x < v.z) { v = glm::vec3(1, 0, 0); }
-					else { v = glm::vec3(0, 0, 1); }
-				}
-				else
-				{
-					if (v.y < v.z) { v = glm::vec3(0, 1, 0); }
-					else { v = glm::vec3(0, 0, 1); }
-				}
-				auto axis = glm::normalize(glm::cross(from, v));
-				return glm::quat(0, axis);
-			}
-			else
-			{
-				return glm::normalize(glm::quat(1.0f + dot, localW));
-			}
 		}
 	}
 
@@ -315,15 +233,15 @@ namespace saba
 					SolvePlane(iteration, chainIdx, SolveAxis::X);
 					continue;
 				}
-				else if ((chain.m_limitMin.y != 0 || chain.m_limitMax.y != 0) &&
+				if ((chain.m_limitMin.y != 0 || chain.m_limitMax.y != 0) &&
 					(chain.m_limitMin.x == 0 || chain.m_limitMax.x == 0) &&
 					(chain.m_limitMin.z == 0 || chain.m_limitMax.z == 0)
-					)
+				)
 				{
 					SolvePlane(iteration, chainIdx, SolveAxis::Y);
 					continue;
 				}
-				else if ((chain.m_limitMin.z != 0 || chain.m_limitMax.z != 0) &&
+				if ((chain.m_limitMin.z != 0 || chain.m_limitMax.z != 0) &&
 					(chain.m_limitMin.x == 0 || chain.m_limitMax.x == 0) &&
 					(chain.m_limitMin.y == 0 || chain.m_limitMax.y == 0)
 					)
@@ -335,13 +253,13 @@ namespace saba
 
 			auto targetPos = glm::vec3(m_ikTarget->GetGlobalTransform()[3]);
 
-			auto invChain = glm::inverse(chain.m_node->GetGlobalTransform());
+			auto invChain = inverse(chain.m_node->GetGlobalTransform());
 
 			auto chainIkPos = glm::vec3(invChain * glm::vec4(ikPos, 1));
 			auto chainTargetPos = glm::vec3(invChain * glm::vec4(targetPos, 1));
 
-			auto chainIkVec = glm::normalize(chainIkPos);
-			auto chainTargetVec = glm::normalize(chainTargetPos);
+			auto chainIkVec = normalize(chainIkPos);
+			auto chainTargetVec = normalize(chainTargetPos);
 
 			auto dot = glm::dot(chainTargetVec, chainIkVec);
 			dot = glm::clamp(dot, -1.0f, 1.0f);
@@ -353,28 +271,28 @@ namespace saba
 				continue;
 			}
 			angle = glm::clamp(angle, -m_limitAngle, m_limitAngle);
-			auto cross = glm::normalize(glm::cross(chainTargetVec, chainIkVec));
-			auto rot = glm::rotate(glm::quat(1, 0, 0, 0), angle, cross);
+			auto cross = normalize(glm::cross(chainTargetVec, chainIkVec));
+			auto rot = rotate(glm::quat(1, 0, 0, 0), angle, cross);
 
 			auto chainRot = chainNode->GetIKRotate() * chainNode->AnimateRotate() * rot;
 			if (chain.m_enableAxisLimit)
 			{
-				auto chainRotM = glm::mat3_cast(chainRot);
+				auto chainRotM = mat3_cast(chainRot);
 				auto rotXYZ = Decompose(chainRotM, chain.m_prevAngle);
 				glm::vec3 clampXYZ;
-				clampXYZ = glm::clamp(rotXYZ, chain.m_limitMin, chain.m_limitMax);
+				clampXYZ = clamp(rotXYZ, chain.m_limitMin, chain.m_limitMax);
 
-				clampXYZ = glm::clamp(clampXYZ - chain.m_prevAngle, -m_limitAngle, m_limitAngle) + chain.m_prevAngle;
-				auto r = glm::rotate(glm::quat(1, 0, 0, 0), clampXYZ.x, glm::vec3(1, 0, 0));
-				r = glm::rotate(r, clampXYZ.y, glm::vec3(0, 1, 0));
-				r = glm::rotate(r, clampXYZ.z, glm::vec3(0, 0, 1));
-				chainRotM = glm::mat3_cast(r);
+				clampXYZ = clamp(clampXYZ - chain.m_prevAngle, -m_limitAngle, m_limitAngle) + chain.m_prevAngle;
+				auto r = rotate(glm::quat(1, 0, 0, 0), clampXYZ.x, glm::vec3(1, 0, 0));
+				r = rotate(r, clampXYZ.y, glm::vec3(0, 1, 0));
+				r = rotate(r, clampXYZ.z, glm::vec3(0, 0, 1));
+				chainRotM = mat3_cast(r);
 				chain.m_prevAngle = clampXYZ;
 
-				chainRot = glm::quat_cast(chainRotM);
+				chainRot = quat_cast(chainRotM);
 			}
 
-			auto ikRot = chainRot * glm::inverse(chainNode->AnimateRotate());
+			auto ikRot = chainRot * inverse(chainNode->AnimateRotate());
 			chainNode->SetIKRotate(ikRot);
 
 			chainNode->UpdateLocalTransform();
@@ -385,24 +303,20 @@ namespace saba
 	void MMDIkSolver::SolvePlane(uint32_t iteration, size_t chainIdx, SolveAxis solveAxis)
 	{
 		int RotateAxisIndex = 0; // X axis
-		glm::vec3 RotateAxis = glm::vec3(1, 0, 0);
-		glm::vec3 Plane = glm::vec3(0, 1, 1);
+		auto RotateAxis = glm::vec3(1, 0, 0);
 		switch (solveAxis)
 		{
 		case SolveAxis::X:
 			RotateAxisIndex = 0; // X axis
 			RotateAxis = glm::vec3(1, 0, 0);
-			Plane = glm::vec3(0, 1, 1);
 			break;
 		case SolveAxis::Y:
 			RotateAxisIndex = 1; // Y axis
 			RotateAxis = glm::vec3(0, 1, 0);
-			Plane = glm::vec3(1, 0, 1);
 			break;
 		case SolveAxis::Z:
 			RotateAxisIndex = 2; // Z axis
 			RotateAxis = glm::vec3(0, 0, 1);
-			Plane = glm::vec3(1, 1, 0);
 			break;
 		default:
 			break;
@@ -413,27 +327,26 @@ namespace saba
 
 		auto targetPos = glm::vec3(m_ikTarget->GetGlobalTransform()[3]);
 
-		auto invChain = glm::inverse(chain.m_node->GetGlobalTransform());
+		auto invChain = inverse(chain.m_node->GetGlobalTransform());
 
 		auto chainIkPos = glm::vec3(invChain * glm::vec4(ikPos, 1));
 		auto chainTargetPos = glm::vec3(invChain * glm::vec4(targetPos, 1));
 
-		auto chainIkVec = glm::normalize(chainIkPos);
-		auto chainTargetVec = glm::normalize(chainTargetPos);
+		auto chainIkVec = normalize(chainIkPos);
+		auto chainTargetVec = normalize(chainTargetPos);
 
 		auto dot = glm::dot(chainTargetVec, chainIkVec);
 		dot = glm::clamp(dot, -1.0f, 1.0f);
 
 		float angle = std::acos(dot);
-		float angleDeg = glm::degrees(angle);
 
 		angle = glm::clamp(angle, -m_limitAngle, m_limitAngle);
 
-		auto rot1 = glm::rotate(glm::quat(1, 0, 0, 0), angle, RotateAxis);
+		auto rot1 = rotate(glm::quat(1, 0, 0, 0), angle, RotateAxis);
 		auto targetVec1 = rot1 * chainTargetVec;
 		auto dot1 = glm::dot(targetVec1, chainIkVec);
 
-		auto rot2 = glm::rotate(glm::quat(1, 0, 0, 0), -angle, RotateAxis);
+		auto rot2 = rotate(glm::quat(1, 0, 0, 0), -angle, RotateAxis);
 		auto targetVec2 = rot2 * chainTargetVec;
 		auto dot2 = glm::dot(targetVec2, chainIkVec);
 
@@ -468,7 +381,7 @@ namespace saba
 		newAngle = glm::clamp(newAngle, chain.m_limitMin[RotateAxisIndex], chain.m_limitMax[RotateAxisIndex]);
 		chain.m_planeModeAngle = newAngle;
 
-		auto ikRotM = glm::rotate(glm::quat(1, 0, 0, 0), newAngle, RotateAxis) * glm::inverse(chain.m_node->AnimateRotate());
+		auto ikRotM = rotate(glm::quat(1, 0, 0, 0), newAngle, RotateAxis) * inverse(chain.m_node->AnimateRotate());
 		chain.m_node->SetIKRotate(ikRotM);
 
 		chain.m_node->UpdateLocalTransform();

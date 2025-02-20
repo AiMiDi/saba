@@ -37,7 +37,7 @@ namespace saba
 		// remove comment
 		for (auto it = lines.begin() + 1; it != lines.end(); ++it)
 		{
-			auto& line = (*it);
+			auto& line = *it;
 			auto commentPos = line.find("//");
 			line = line.substr(0, commentPos);
 		}
@@ -52,7 +52,7 @@ namespace saba
 			SABA_INFO("VPD File Parse Error.[parent fil name]");
 			return false;
 		}
-		lineIt++;
+		++lineIt;
 
 		// num bones
 		lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
@@ -66,18 +66,18 @@ namespace saba
 		int numBones = 0;
 		try
 		{
-			const auto& line = (*lineIt);
+			const auto& line = *lineIt;
 			auto numStr = line.substr(0, line.find(';'));
 			numBones = std::stoi(numStr);
 		}
 		catch (std::exception& e)
 		{
-			SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+			SABA_INFO("VPD File Parse Error. {}:[{}]", static_cast<size_t>(lineIt - lines.begin()), e.what());
 			return false;
 		}
 		std::vector<VPDBone> bones(numBones);
 
-		lineIt++;
+		++lineIt;
 
 		lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 			return !line.empty();
@@ -87,19 +87,19 @@ namespace saba
 		{
 			int boneIdx = 0;
 			{
-				const auto& line = (*lineIt);
+				const auto& line = *lineIt;
 				auto delimPos1 = line.find("Bone");
-				if (delimPos1 == line.npos)
+				if (delimPos1 == std::string::npos)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Not Found Bone]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Not Found Bone]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 				delimPos1 += 4;
 
 				auto delimPos2 = line.find('{', delimPos1);
-				if (delimPos2 == line.npos)
+				if (delimPos2 == std::string::npos)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Not Found Bone]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Not Found Bone]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
@@ -110,51 +110,51 @@ namespace saba
 				}
 				catch (std::exception& e)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					SABA_INFO("VPD File Parse Error. {}:[{}]", static_cast<size_t>(lineIt - lines.begin()), e.what());
 					return false;
 				}
 				if (boneIdx >= numBones)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Bone Index over]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Bone Index over]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 				bones[boneIdx].m_boneName = line.substr(delimPos2 + 1);
 			}
-			++lineIt;;
+			++lineIt;
 			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 				return !line.empty();
 			});
 			
 			{
-				const auto& line = (*lineIt);
+				const auto& line = *lineIt;
 				auto delim1 = line.find_first_not_of(" \t");
 				auto delim2 = line.find_first_of(" \t,", delim1);
-				if (line.npos == delim1 || line.npos == delim2)
+				if (std::string::npos == delim1 || std::string::npos == delim2)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
 				auto delim3 = line.find_first_not_of(" \t,", delim2);
 				auto delim4 = line.find_first_of(" \t,", delim3);
-				if (line.npos == delim3 || line.npos == delim4)
+				if (std::string::npos == delim3 || std::string::npos == delim4)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
 				auto delim5 = line.find_first_not_of(" \t,", delim4);
 				auto delim6 = line.find_first_of(" \t;", delim5);
-				if (line.npos == delim5 || line.npos == delim6)
+				if (std::string::npos == delim5 || std::string::npos == delim6)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
-				auto delim7 = line.find_first_of(";", delim5);
-				if (line.npos == delim7)
+				auto delim7 = line.find_first_of(';', delim5);
+				if (std::string::npos == delim7)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
@@ -169,53 +169,52 @@ namespace saba
 				}
 				catch (std::exception& e)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					SABA_INFO("VPD File Parse Error. {}:[{}]", static_cast<size_t>(lineIt - lines.begin()), e.what());
 					return false;
 				}
 			}
-			++lineIt;;
+			++lineIt;
 			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 				return !line.empty();
 			});
 
 			{
-				const auto& line = (*lineIt);
+				const auto& line = *lineIt;
 				auto delim1 = line.find_first_not_of(" \t");
 				auto delim2 = line.find_first_of(" \t,", delim1);
-				if (line.npos == delim1 || line.npos == delim2)
+				if (std::string::npos == delim1 || std::string::npos == delim2)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
 				auto delim3 = line.find_first_not_of(" \t,", delim2);
 				auto delim4 = line.find_first_of(" \t,", delim3);
-				if (line.npos == delim3 || line.npos == delim4)
+				if (std::string::npos == delim3 || std::string::npos == delim4)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
 				auto delim5 = line.find_first_not_of(" \t,", delim4);
 				auto delim6 = line.find_first_of(" \t,", delim5);
-				if (line.npos == delim5 || line.npos == delim6)
+				if (std::string::npos == delim5 || std::string::npos == delim6)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
 				auto delim7 = line.find_first_not_of(" \t,", delim6);
 				auto delim8 = line.find_first_of(" \t;", delim7);
-				if (line.npos == delim7 || line.npos == delim8)
+				if (std::string::npos == delim7 || std::string::npos == delim8)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
-				auto delim9 = line.find_first_of(";", delim7);
-				if (line.npos == delim7)
+				if (std::string::npos == delim7)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
@@ -232,24 +231,24 @@ namespace saba
 				}
 				catch (std::exception& e)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					SABA_INFO("VPD File Parse Error. {}:[{}]", static_cast<size_t>(lineIt - lines.begin()), e.what());
 					return false;
 				}
 			}
-			++lineIt;;
+			++lineIt;
 			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 				return !line.empty();
 			});
 
 			{
-				const auto& line = (*lineIt);
-				if (line.find(('}')) == line.npos)
+				const auto& line = *lineIt;
+				if (line.find('}') == std::string::npos)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 			}
-			++lineIt;;
+			++lineIt;
 			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 				return !line.empty();
 			});
@@ -258,9 +257,9 @@ namespace saba
 
 		for (auto& bone : bones)
 		{
-			std::u16string u16Str = saba::ConvertSjisToU16String(bone.m_boneName.c_str());
+			std::u16string u16Str = ConvertSjisToU16String(bone.m_boneName.c_str());
 			std::string u8Str;
-			saba::ConvU16ToU8(u16Str, u8Str);
+			ConvU16ToU8(u16Str, u8Str);
 			bone.m_boneName = u8Str;
 		}
 
@@ -271,53 +270,52 @@ namespace saba
 		{
 			VPDMorph morph;
 			{
-				const auto& line = (*lineIt);
+				const auto& line = *lineIt;
 				auto delimPos1 = line.find("Morph");
-				if (delimPos1 == line.npos)
+				if (delimPos1 == std::string::npos)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Not Found Morph]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Not Found Morph]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 				delimPos1 += sizeof("Morph") - 1;
 
 				auto delimPos2 = line.find('{', delimPos1);
-				if (delimPos2 == line.npos)
+				if (delimPos2 == std::string::npos)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Not Found Morph]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Not Found Morph]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
 				auto numStr = line.substr(delimPos1, delimPos2 - delimPos1);
 				try
 				{
-					int morphIndex = std::stoi(numStr);
+					std::ignore = std::stoi(numStr);
 				}
 				catch (std::exception& e)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					SABA_INFO("VPD File Parse Error. {}:[{}]", static_cast<size_t>(lineIt - lines.begin()), e.what());
 					return false;
 				}
 				morph.m_morphName = line.substr(delimPos2 + 1);
 			}
-			++lineIt;;
+			++lineIt;
 			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 				return !line.empty();
 			});
 
 			{
-				const auto& line = (*lineIt);
+				const auto& line = *lineIt;
 				auto delim1 = line.find_first_not_of(" \t");
 				auto delim2 = line.find_first_of(" \t;", delim1);
-				if (line.npos == delim1 || line.npos == delim2)
+				if (std::string::npos == delim1 || std::string::npos == delim2)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
-				auto delim3 = line.find_first_of(";", delim2);
-				if (line.npos == delim2)
+				if (std::string::npos == delim2)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
 				}
 
@@ -328,25 +326,25 @@ namespace saba
 				}
 				catch (std::exception& e)
 				{
-					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					SABA_INFO("VPD File Parse Error. {}:[{}]", static_cast<size_t>(lineIt - lines.begin()), e.what());
 					return false;
 				}
-				++lineIt;;
-				lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
-					return !line.empty();
+				++lineIt;
+				lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line2) {
+					return !line2.empty();
 				});
 
 				{
-					const auto& line = (*lineIt);
-					if (line.find(('}')) == line.npos)
+					const auto& line2 = *lineIt;
+					if (line2.find('}') == std::string::npos)
 					{
-						SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+						SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 						return false;
 					}
 				}
-				++lineIt;;
-				lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
-					return !line.empty();
+				++lineIt;
+				lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line2) {
+					return !line2.empty();
 				});
 				boneCount++;
 			}
@@ -356,9 +354,9 @@ namespace saba
 
 		for (auto& morph : morphs)
 		{
-			std::u16string u16Str = saba::ConvertSjisToU16String(morph.m_morphName.c_str());
+			std::u16string u16Str = ConvertSjisToU16String(morph.m_morphName.c_str());
 			std::string u8Str;
-			saba::ConvU16ToU8(u16Str, u8Str);
+			ConvU16ToU8(u16Str, u8Str);
 			morph.m_morphName = u8Str;
 		}
 

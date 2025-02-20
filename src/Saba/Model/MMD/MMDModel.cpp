@@ -14,9 +14,7 @@
 
 namespace saba
 {
-	MMDPhysicsManager::MMDPhysicsManager()
-	{
-	}
+	MMDPhysicsManager::MMDPhysicsManager() = default;
 
 	MMDPhysicsManager::~MMDPhysicsManager()
 	{
@@ -41,7 +39,7 @@ namespace saba
 		return m_mmdPhysics->Create();
 	}
 
-	MMDPhysics* MMDPhysicsManager::GetMMDPhysics()
+	MMDPhysics* MMDPhysicsManager::GetMMDPhysics() const
 	{
 		return m_mmdPhysics.get();
 	}
@@ -49,91 +47,83 @@ namespace saba
 	MMDRigidBody* MMDPhysicsManager::AddRigidBody()
 	{
 		SABA_ASSERT(m_mmdPhysics != nullptr);
-		auto rigidBody = std::make_unique<MMDRigidBody>();
-		auto ret = rigidBody.get();
-		m_rigidBodys.emplace_back(std::move(rigidBody));
-
-		return ret;
+		return m_rigidBodys.emplace_back(std::make_unique<MMDRigidBody>()).get();
 	}
 
 	MMDJoint* MMDPhysicsManager::AddJoint()
 	{
 		SABA_ASSERT(m_mmdPhysics != nullptr);
-		auto joint = std::make_unique<MMDJoint>();
-		auto ret = joint.get();
-		m_joints.emplace_back(std::move(joint));
-
-		return ret;
+		return m_joints.emplace_back(std::make_unique<MMDJoint>()).get();
 	}
 
 	void MMDModel::SaveBaseAnimation()
 	{
-		auto nodeMan = GetNodeManager();
+		const auto nodeMan = GetNodeManager();
 		for (size_t i = 0; i < nodeMan->GetNodeCount(); i++)
 		{
-			auto node = nodeMan->GetMMDNode(i);
+			const auto node = nodeMan->GetMMDNode(i);
 			node->SaveBaseAnimation();
 		}
 
-		auto morphMan = GetMorphManager();
+		const auto morphMan = GetMorphManager();
 		for (size_t i = 0; i < morphMan->GetMorphCount(); i++)
 		{
-			auto morph = morphMan->GetMorph(i);
+			const auto morph = morphMan->GetMorph(i);
 			morph->SaveBaseAnimation();
 		}
 
-		auto ikMan = GetIKManager();
+		const auto ikMan = GetIKManager();
 		for (size_t i = 0; i < ikMan->GetIKSolverCount(); i++)
 		{
-			auto ikSolver = ikMan->GetMMDIKSolver(i);
+			const auto ikSolver = ikMan->GetMMDIKSolver(i);
 			ikSolver->SaveBaseAnimation();
 		}
 	}
 
 	void MMDModel::LoadBaseAnimation()
 	{
-		auto nodeMan = GetNodeManager();
+		const auto nodeMan = GetNodeManager();
 		for (size_t i = 0; i < nodeMan->GetNodeCount(); i++)
 		{
-			auto node = nodeMan->GetMMDNode(i);
+			const auto node = nodeMan->GetMMDNode(i);
 			node->LoadBaseAnimation();
 		}
 
-		auto morphMan = GetMorphManager();
+		const auto morphMan = GetMorphManager();
 		for (size_t i = 0; i < morphMan->GetMorphCount(); i++)
 		{
-			auto morph = morphMan->GetMorph(i);
+			const auto morph = morphMan->GetMorph(i);
 			morph->LoadBaseAnimation();
 		}
 
-		auto ikMan = GetIKManager();
+		const auto ikMan = GetIKManager();
 		for (size_t i = 0; i < ikMan->GetIKSolverCount(); i++)
 		{
-			auto ikSolver = ikMan->GetMMDIKSolver(i);
+			const auto ikSolver = ikMan->GetMMDIKSolver(i);
 			ikSolver->LoadBaseAnimation();
 		}
 	}
 
 	void MMDModel::ClearBaseAnimation()
 	{
-		auto nodeMan = GetNodeManager();
+		const auto nodeMan = GetNodeManager();
 		for (size_t i = 0; i < nodeMan->GetNodeCount(); i++)
 		{
-			auto node = nodeMan->GetMMDNode(i);
+			const auto node = nodeMan->GetMMDNode(i);
 			node->ClearBaseAnimation();
 		}
 
-		auto morphMan = GetMorphManager();
+		const auto morphMan = GetMorphManager();
 		for (size_t i = 0; i < morphMan->GetMorphCount(); i++)
 		{
-			auto morph = morphMan->GetMorph(i);
+			const auto morph = morphMan->GetMorph(i);
 			morph->ClearBaseAnimation();
 		}
 
-		auto ikMan = GetIKManager();
+		const auto ikMan = GetIKManager();
 		for (size_t i = 0; i < ikMan->GetIKSolverCount(); i++)
 		{
-			auto ikSolver = ikMan->GetMMDIKSolver(i);
+			const auto ikSolver = ikMan->GetMMDIKSolver(i);
 			ikSolver->ClearBaseAnimation();
 		}
 	}
@@ -142,18 +132,18 @@ namespace saba
 	{
 		glm::mat3 InvZ(const glm::mat3& m)
 		{
-			const glm::mat3 invZ = glm::scale(glm::mat4(1.0f), glm::vec3(1, 1, -1));
+			const glm::mat3 invZ = scale(glm::mat4(1.0f), glm::vec3(1, 1, -1));
 			return invZ * m * invZ;
 		}
 		glm::quat InvZ(const glm::quat& q)
 		{
-			auto rot0 = glm::mat3_cast(q);
-			auto rot1 = InvZ(rot0);
-			return glm::quat_cast(rot1);
+			const auto rot0 = mat3_cast(q);
+			const auto rot1 = InvZ(rot0);
+			return quat_cast(rot1);
 		}
 	}
 
-	void MMDModel::UpdateAllAnimation(VMDAnimation * vmdAnim, float vmdFrame, float physicsElapsed)
+	void MMDModel::UpdateAllAnimation(const VMDAnimation * vmdAnim, const float vmdFrame, const float physicsElapsed)
 	{
 		if (vmdAnim != nullptr)
 		{
@@ -169,7 +159,7 @@ namespace saba
 		UpdateNodeAnimation(true);
 	}
 
-	void MMDModel::LoadPose(const VPDFile & vpd, int frameCount)
+	void MMDModel::LoadPose(const VPDFile & vpd, const int frameCount)
 	{
 		struct Pose
 		{
@@ -178,20 +168,33 @@ namespace saba
 			glm::vec3	m_endTranslate;
 			glm::quat	m_beginRotate;
 			glm::quat	m_endRotate;
+
+			explicit Pose(
+				MMDNode* node = nullptr,
+				const glm::vec3& beginTranslate = glm::vec3(0.0f),
+				const glm::vec3& endTranslate = glm::vec3(0.0f),
+				const glm::quat& beginRotate = glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+				const glm::quat& endRotate = glm::quat(1.0f, 0.0f, 0.0f, 0.0f)
+			)
+				: m_node(node),
+				  m_beginTranslate(beginTranslate),
+				  m_endTranslate(endTranslate),
+				  m_beginRotate(beginRotate),
+				  m_endRotate(endRotate)
+			{
+			}
 		};
 		std::vector<Pose> poses;
 		for (const auto& bone : vpd.m_bones)
 		{
-			auto nodeIdx = GetNodeManager()->FindNodeIndex(bone.m_boneName);
-			if (MMDNodeManager::NPos != nodeIdx)
+			if (const auto nodeIdx = GetNodeManager()->FindNodeIndex(bone.m_boneName); MMDNodeManager::NPos != nodeIdx)
 			{
-				Pose pose;
-				pose.m_node = GetNodeManager()->GetMMDNode(bone.m_boneName);
-				pose.m_beginTranslate = pose.m_node->GetAnimationTranslate();
-				pose.m_endTranslate = bone.m_translate * glm::vec3(1, 1, -1);
-				pose.m_beginRotate = pose.m_node->GetAnimationRotate();
-				pose.m_endRotate = InvZ(bone.m_quaternion);
-				poses.emplace_back(std::move(pose));
+				const auto node = GetNodeManager()->GetMMDNode(bone.m_boneName);
+				poses.emplace_back(node,
+					node->GetAnimationTranslate(),
+					bone.m_translate * glm::vec3(1, 1, -1),
+					node->GetAnimationRotate(),
+					InvZ(bone.m_quaternion));
 			}
 		}
 
@@ -200,18 +203,25 @@ namespace saba
 			MMDMorph*	m_morph;
 			float		m_beginWeight;
 			float		m_endWeight;
+
+			explicit Morph(
+				MMDMorph* morph = nullptr,
+				const float beginWeight = 0.0f,
+				const float endWeight = 0.0f
+			)
+				: m_morph(morph),
+				  m_beginWeight(beginWeight),
+				  m_endWeight(endWeight)
+			{
+			}
 		};
 		std::vector<Morph> morphs;
-		for (const auto& vpdMorph : vpd.m_morphs)
+		for (const auto& [m_morphName, m_weight] : vpd.m_morphs)
 		{
-			auto morphIdx = GetMorphManager()->FindMorphIndex(vpdMorph.m_morphName);
-			if (MMDMorphManager::NPos != morphIdx)
+			if (const auto morphIdx = GetMorphManager()->FindMorphIndex(m_morphName); MMDMorphManager::NPos != morphIdx)
 			{
-				Morph morph;
-				morph.m_morph = GetMorphManager()->GetMorph(vpdMorph.m_morphName);
-				morph.m_beginWeight = morph.m_morph->GetWeight();
-				morph.m_endWeight = vpdMorph.m_weight;
-				morphs.emplace_back(std::move(morph));
+				const auto morph = GetMorphManager()->GetMorph(m_morphName);
+				morphs.emplace_back(morph, morph->GetWeight(), m_weight);
 			}
 		}
 
@@ -221,11 +231,11 @@ namespace saba
 			BeginAnimation();
 
 			// evaluate
-			float w = float(1 + i) / float(frameCount);
+			float w = static_cast<float>(1 + i) / static_cast<float>(frameCount);
 			for (auto& pose : poses)
 			{
-				auto t = glm::mix(pose.m_beginTranslate, pose.m_endTranslate, w);
-				auto q = glm::slerp(pose.m_beginRotate, pose.m_endRotate, w);
+				auto t = mix(pose.m_beginTranslate, pose.m_endTranslate, w);
+				auto q = slerp(pose.m_beginRotate, pose.m_endRotate, w);
 				pose.m_node->SetAnimationTranslate(t);
 				pose.m_node->SetAnimationRotate(q);
 			}
@@ -253,7 +263,7 @@ namespace saba
 		UpdateNodeAnimation(false);
 	}
 
-	void MMDModel::UpdatePhysics(float elapsed)
+	void MMDModel::UpdatePhysics(const float elapsed)
 	{
 		UpdatePhysicsAnimation(elapsed);
 	}

@@ -12,9 +12,6 @@
 #include <string>
 #include <vector>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 namespace saba
@@ -380,7 +377,8 @@ namespace saba
 		struct Target
 		{
 			TargetType	m_type;
-			int32_t		m_index;
+			int32_t
+			m_index;
 		};
 
 		enum class FrameType : uint8_t
@@ -593,7 +591,7 @@ namespace saba
 		std::vector<PMXSoftbody>	m_softbodies;
 	};
 
-	bool ReadPMXFile(PMXFile* pmdFile, const char* filename);
+	bool ReadPMXFile(PMXFile* pmxFile, const char* filename);
 }
 
 #endif // !SABA_MODEL_PMXFILE_H_

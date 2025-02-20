@@ -11,34 +11,31 @@
 #include "MMDIkSolver.h"
 #include "PMXFile.h"
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <future>
 
 namespace saba
 {
-	class PMXNode : public MMDNode
+	class PMXNode final : public MMDNode
 	{
 	public:
 		PMXNode();
 
-		void SetDeformDepth(int32_t depth) { m_deformDepth = depth; }
+		void SetDeformDepth(const int32_t depth) { m_deformDepth = depth; }
 		int32_t GetDeformdepth() const { return m_deformDepth; }
 
-		void EnableDeformAfterPhysics(bool enable) { m_isDeformAfterPhysics = enable; }
-		bool IsDeformAfterPhysics() { return m_isDeformAfterPhysics; }
+		void EnableDeformAfterPhysics(const bool enable) { m_isDeformAfterPhysics = enable; }
+		bool IsDeformAfterPhysics() const { return m_isDeformAfterPhysics; }
 
 		void SetAppendNode(PMXNode* node) { m_appendNode = node; }
 		PMXNode* GetAppendNode() const { return m_appendNode; }
 
-		void EnableAppendRotate(bool enable) { m_isAppendRotate = enable; }
-		void EnableAppendTranslate(bool enable) { m_isAppendTranslate = enable; }
-		void EnableAppendLocal(bool enable) { m_isAppendLocal = enable; }
-		void SetAppendWeight(float weight) { m_appendWeight = weight; }
+		void EnableAppendRotate(const bool enable) { m_isAppendRotate = enable; }
+		void EnableAppendTranslate(const bool enable) { m_isAppendTranslate = enable; }
+		void EnableAppendLocal(const bool enable) { m_isAppendLocal = enable; }
+		void SetAppendWeight(const float weight) { m_appendWeight = weight; }
 		float GetAppendWeight() const { return m_appendWeight; }
 
 		const glm::vec3& GetAppendTranslate() const { return m_appendTranslate; }
@@ -65,22 +62,22 @@ namespace saba
 		bool		m_isAppendLocal;
 		float		m_appendWeight;
 
-		glm::vec3	m_appendTranslate;
-		glm::quat	m_appendRotate;
+		glm::vec3	m_appendTranslate{};
+		glm::quat	m_appendRotate{};
 
 		MMDIkSolver*	m_ikSolver;
 
 	};
 
-	class PMXModel : public MMDModel
+	class PMXModel final : public MMDModel
 	{
 	public:
 		PMXModel();
-		~PMXModel();
+		~PMXModel() override;
 
 		MMDNodeManager* GetNodeManager() override { return &m_nodeMan; }
 		MMDIKManager* GetIKManager() override { return &m_ikSolverMan; }
-		MMDMorphManager* GetMorphManager() override { return &m_morphMan; };
+		MMDMorphManager* GetMorphManager() override { return &m_morphMan; }
 		MMDPhysicsManager* GetPhysicsManager() override { return &m_physicsMan; }
 
 		size_t GetVertexCount() const override { return m_positions.size(); }
@@ -124,7 +121,6 @@ namespace saba
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
-	public:
 		enum class SkinningType
 		{
 			Weight1,
@@ -181,26 +177,26 @@ namespace saba
 		struct MaterialFactor
 		{
 			MaterialFactor() = default;
-			MaterialFactor(const saba::PMXMorph::MaterialMorph& pmxMat);
+			explicit MaterialFactor(const PMXMorph::MaterialMorph& pmxMat);
 
 			void Mul(const MaterialFactor& val, float weight);
 			void Add(const MaterialFactor& val, float weight);
 
-			glm::vec3	m_diffuse;
+			glm::vec3	m_diffuse{};
 			float		m_alpha;
-			glm::vec3	m_specular;
+			glm::vec3	m_specular{};
 			float		m_specularPower;
-			glm::vec3	m_ambient;
-			glm::vec4	m_edgeColor;
+			glm::vec3	m_ambient{};
+			glm::vec4	m_edgeColor{};
 			float		m_edgeSize;
-			glm::vec4	m_textureFactor;
-			glm::vec4	m_spTextureFactor;
-			glm::vec4	m_toonTextureFactor;
+			glm::vec4	m_textureFactor{};
+			glm::vec4	m_spTextureFactor{};
+			glm::vec4	m_toonTextureFactor{};
 		};
 
 		struct MaterialMorphData
 		{
-			std::vector<saba::PMXMorph::MaterialMorph>	m_materialMorphs;
+			std::vector<PMXMorph::MaterialMorph>	m_materialMorphs;
 		};
 
 		struct BoneMorphElement
@@ -217,7 +213,7 @@ namespace saba
 
 		struct GroupMorphData
 		{
-			std::vector<saba::PMXMorph::GroupMorph>		m_groupMorphs;
+			std::vector<PMXMorph::GroupMorph>		m_groupMorphs;
 		};
 
 		enum class MorphType
@@ -233,8 +229,8 @@ namespace saba
 		class PMXMorph : public MMDMorph
 		{
 		public:
-			MorphType	m_morphType;
-			size_t		m_dataIndex;
+			MorphType	m_morphType{MorphType::None};
+			size_t		m_dataIndex{};
 		};
 
 		struct UpdateRange
@@ -243,11 +239,10 @@ namespace saba
 			size_t	m_vertexCount;
 		};
 
-	private:
 		void SetupParallelUpdate();
 		void Update(const UpdateRange& range);
 
-		void Morph(PMXMorph* morph, float weight);
+		void Morph(const PMXMorph* morph, float weight);
 
 		void MorphPosition(const PositionMorphData& morphData, float weight);
 
@@ -257,9 +252,8 @@ namespace saba
 		void EndMorphMaterial();
 		void MorphMaterial(const MaterialMorphData& morphData, float weight);
 
-		void MorphBone(const BoneMorphData& morphData, float weight);
+		static void MorphBone(const BoneMorphData& morphData, float weight);
 
-	private:
 		std::vector<glm::vec3>	m_positions;
 		std::vector<glm::vec3>	m_normals;
 		std::vector<glm::vec2>	m_uvs;

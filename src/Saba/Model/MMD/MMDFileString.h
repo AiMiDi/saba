@@ -52,7 +52,7 @@ namespace saba
 		//std::wstring ToWString() const { return ConvertSjisToWString(m_buffer); }
 		std::string ToUtf8String() const;
 
-		char	m_buffer[Size + 1];
+		char	m_buffer[Size + 1]{};
 	};
 
 	template <size_t Size>
@@ -62,11 +62,11 @@ namespace saba
 	}
 
 	template<size_t Size>
-	inline std::string MMDFileString<Size>::ToUtf8String() const
+	std::string MMDFileString<Size>::ToUtf8String() const
 	{
-		std::u16string u16Str = saba::ConvertSjisToU16String(m_buffer);
+		const std::u16string u16Str = saba::ConvertSjisToU16String(m_buffer);
 		std::string u8Str;
-		saba::ConvU16ToU8(u16Str, u8Str);
+		ConvU16ToU8(u16Str, u8Str);
 		return u8Str;
 	}
 }

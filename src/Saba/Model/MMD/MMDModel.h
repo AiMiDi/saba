@@ -15,8 +15,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 
 namespace saba
 {
@@ -29,7 +27,8 @@ namespace saba
 	class MMDNodeManager
 	{
 	public:
-		static const size_t NPos = -1;
+		virtual ~MMDNodeManager() = default;
+		static constexpr size_t NPos = -1;
 
 		virtual size_t GetNodeCount() = 0;
 		virtual size_t FindNodeIndex(const std::string& name) = 0;
@@ -37,7 +36,7 @@ namespace saba
 
 		MMDNode* GetMMDNode(const std::string& nodeName)
 		{
-			auto findIdx = FindNodeIndex(nodeName);
+			const auto findIdx = FindNodeIndex(nodeName);
 			if (findIdx == NPos)
 			{
 				return nullptr;
@@ -49,7 +48,8 @@ namespace saba
 	class MMDIKManager
 	{
 	public:
-		static const size_t NPos = -1;
+		virtual ~MMDIKManager() = default;
+		static constexpr size_t NPos = -1;
 
 		virtual size_t GetIKSolverCount() = 0;
 		virtual size_t FindIKSolverIndex(const std::string& name) = 0;
@@ -57,7 +57,7 @@ namespace saba
 
 		MMDIkSolver* GetMMDIKSolver(const std::string& ikName)
 		{
-			auto findIdx = FindIKSolverIndex(ikName);
+			const auto findIdx = FindIKSolverIndex(ikName);
 			if (findIdx == NPos)
 			{
 				return nullptr;
@@ -69,7 +69,8 @@ namespace saba
 	class MMDMorphManager
 	{
 	public:
-		static const size_t NPos = -1;
+		virtual ~MMDMorphManager() = default;
+		static constexpr size_t NPos = -1;
 
 		virtual size_t GetMorphCount() = 0;
 		virtual size_t FindMorphIndex(const std::string& name) = 0;
@@ -77,7 +78,7 @@ namespace saba
 
 		MMDMorph* GetMorph(const std::string& name)
 		{
-			auto findIdx = FindMorphIndex(name);
+			const auto findIdx = FindMorphIndex(name);
 			if (findIdx == NPos)
 			{
 				return nullptr;
@@ -97,7 +98,7 @@ namespace saba
 
 		bool Create();
 
-		MMDPhysics* GetMMDPhysics();
+		MMDPhysics* GetMMDPhysics() const;
 
 		MMDRigidBody* AddRigidBody();
 		std::vector<RigidBodyPtr>* GetRigidBodys() { return &m_rigidBodys; }
@@ -118,6 +119,16 @@ namespace saba
 		int	m_beginIndex;
 		int	m_vertexCount;
 		int	m_materialID;
+
+		explicit MMDSubMesh(
+			const int beginIndex = 0,
+			const int vertexCount = 0,
+			const int materialID = 0)
+		: m_beginIndex(beginIndex),
+		  m_vertexCount(vertexCount),
+		  m_materialID(materialID)
+	{
+	}
 	};
 
 	class VMDAnimation;
@@ -125,6 +136,7 @@ namespace saba
 	class MMDModel
 	{
 	public:
+		virtual ~MMDModel() = default;
 		virtual MMDNodeManager* GetNodeManager() = 0;
 		virtual MMDIKManager* GetIKManager() = 0;
 		virtual MMDMorphManager* GetMorphManager() = 0;
@@ -176,12 +188,12 @@ namespace saba
 		virtual void Update() = 0;
 		virtual void SetParallelUpdateHint(uint32_t parallelCount) = 0;
 
-		void UpdateAllAnimation(VMDAnimation* vmdAnim, float vmdFrame, float physicsElapsed);
+		void UpdateAllAnimation(const VMDAnimation* vmdAnim, float vmdFrame, float physicsElapsed);
 		void LoadPose(const VPDFile& vpd, int frameCount = 30);
 
 	protected:
 		template <typename NodeType>
-		class MMDNodeManagerT : public MMDNodeManager
+		class MMDNodeManagerT final : public MMDNodeManager
 		{
 		public:
 			using NodePtr = std::unique_ptr<NodeType>;
@@ -199,10 +211,7 @@ namespace saba
 				{
 					return NPos;
 				}
-				else
-				{
-					return findIt - m_nodes.begin();
-				}
+				return findIt - m_nodes.begin();
 			}
 
 			MMDNode* GetMMDNode(size_t idx) override
@@ -213,7 +222,7 @@ namespace saba
 			NodeType* AddNode()
 			{
 				auto node = std::make_unique<NodeType>();
-				node->SetIndex((uint32_t)m_nodes.size());
+				node->SetIndex(static_cast<uint32_t>(m_nodes.size()));
 				m_nodes.emplace_back(std::move(node));
 				return m_nodes[m_nodes.size() - 1].get();
 			}
@@ -233,7 +242,7 @@ namespace saba
 		};
 
 		template <typename IKSolverType>
-		class MMDIKManagerT : public MMDIKManager
+		class MMDIKManagerT final : public MMDIKManager
 		{
 		public:
 			using IKSolverPtr = std::unique_ptr<IKSolverType>;
@@ -251,10 +260,7 @@ namespace saba
 				{
 					return NPos;
 				}
-				else
-				{
-					return findIt - m_ikSolvers.begin();
-				}
+				return findIt - m_ikSolvers.begin();
 			}
 
 			MMDIkSolver* GetMMDIKSolver(size_t idx) override
@@ -283,7 +289,7 @@ namespace saba
 		};
 
 		template <typename MorphType>
-		class MMDMorphManagerT : public MMDMorphManager
+		class MMDMorphManagerT final : public MMDMorphManager
 		{
 		public:
 			using MorphPtr = std::unique_ptr<MorphType>;
@@ -301,10 +307,7 @@ namespace saba
 				{
 					return NPos;
 				}
-				else
-				{
-					return findIt - m_morphs.begin();
-				}
+				return findIt - m_morphs.begin();
 			}
 
 			MMDMorph* GetMorph(size_t idx) override

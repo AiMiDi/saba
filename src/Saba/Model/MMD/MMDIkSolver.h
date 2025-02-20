@@ -10,11 +10,10 @@
 
 #include <vector>
 #include <string>
-#include <glm/vec3.hpp>
 
 namespace saba
 {
-	class MMDIkSolver
+	class MMDIkSolver final
 	{
 	public:
 		MMDIkSolver();
@@ -29,22 +28,19 @@ namespace saba
 			{
 				return m_ikNode->GetName();
 			}
-			else
-			{
-				return "";
-			}
+			return "";
 		}
 
-		void SetIterateCount(uint32_t count) { m_iterateCount = count; }
-		void SetLimitAngle(float angle) { m_limitAngle = angle; }
-		void Enable(bool enable) { m_enable = enable; }
-		bool Enabled() { return m_enable; }
+		void SetIterateCount(const uint32_t count) { m_iterateCount = count; }
+		void SetLimitAngle(const float angle) { m_limitAngle = angle; }
+		void Enable(const bool enable) { m_enable = enable; }
+		bool Enabled() const { return m_enable; }
 
 		void AddIKChain(MMDNode* node, bool isKnee = false);
 		void AddIKChain(
 			MMDNode* node,
 			bool axisLimit,
-			const glm::vec3& limixMin,
+			const glm::vec3& limitMin,
 			const glm::vec3& limitMax
 		);
 
@@ -65,10 +61,27 @@ namespace saba
 			glm::vec3	m_prevAngle;
 			glm::quat	m_saveIKRot;
 			float		m_planeModeAngle;
+
+			IKChain(
+				MMDNode* node = nullptr,
+				const bool enableAxisLimit = false,
+				const glm::vec3& limitMax = glm::vec3(0.0f),
+				const glm::vec3& limitMin = glm::vec3(0.0f),
+				const glm::quat& saveIKRot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+				const glm::vec3& prevAngle = glm::vec3(0.0f),
+				const float planeModeAngle = 0.0f
+			)
+				: m_node(node),
+				  m_enableAxisLimit(enableAxisLimit),
+				  m_limitMax(limitMax),
+				  m_limitMin(limitMin),
+				  m_prevAngle(prevAngle),
+				  m_saveIKRot(saveIKRot),
+				  m_planeModeAngle(planeModeAngle)
+			{
+			}
 		};
 
-	private:
-		void AddIKChain(IKChain&& chain);
 		void SolveCore(uint32_t iteration);
 
 		enum class SolveAxis {
@@ -78,7 +91,6 @@ namespace saba
 		};
 		void SolvePlane(uint32_t iteration, size_t chainIdx, SolveAxis solveAxis);
 
-	private:
 		std::vector<IKChain>	m_chains;
 		MMDNode*	m_ikNode;
 		MMDNode*	m_ikTarget;

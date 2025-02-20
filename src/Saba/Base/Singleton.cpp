@@ -11,13 +11,13 @@ namespace saba
 {
 	namespace
 	{
-		const size_t MaxFinalizerNum = 256;
+		constexpr size_t MaxFinalizerNum = 256;
 		size_t g_finalizerSize = 0;
 
 		SingletonFinalizer::FinalizerFunc g_finalizers[MaxFinalizerNum];
 	}
 
-	void SingletonFinalizer::AddFinalizer(FinalizerFunc finalizer)
+	void SingletonFinalizer::AddFinalizer(const FinalizerFunc& finalizer)
 	{
 		if (g_finalizerSize >= MaxFinalizerNum)
 		{
@@ -32,8 +32,8 @@ namespace saba
 	{
 		for (size_t i = 0; i < g_finalizerSize; i++)
 		{
-			size_t idx = g_finalizerSize - i - 1;
-			(g_finalizers[idx])();
+			const size_t idx = g_finalizerSize - i - 1;
+			g_finalizers[idx]();
 		}
 		g_finalizerSize = 0;
 	}

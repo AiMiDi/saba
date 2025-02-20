@@ -13,7 +13,6 @@
 #include <glm/vec3.hpp>
 #include <vector>
 #include <array>
-#include <string>
 
 namespace saba
 {

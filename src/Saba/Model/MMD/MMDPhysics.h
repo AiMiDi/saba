@@ -9,10 +9,6 @@
 #include "PMDFile.h"
 #include "PMXFile.h"
 
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
-
-#include <vector>
 #include <memory>
 #include <cinttypes>
 
@@ -52,14 +48,14 @@ namespace saba
 		uint16_t GetGroup() const;
 		uint16_t GetGroupMask() const;
 
-		void SetActivation(bool activation);
-		void ResetTransform();
-		void Reset(MMDPhysics* physics);
+		void SetActivation(bool activation) const;
+		void ResetTransform() const;
+		void Reset(const MMDPhysics* physics) const;
 
-		void ReflectGlobalTransform();
-		void CalcLocalTransform();
+		void ReflectGlobalTransform() const;
+		void CalcLocalTransform() const;
 
-		glm::mat4 GetTransform();
+		glm::mat4 GetTransform() const;
 
 	private:
 		enum class RigidBodyType
@@ -69,7 +65,6 @@ namespace saba
 			Aligned,
 		};
 
-	private:
 		std::unique_ptr<btCollisionShape>	m_shape;
 		std::unique_ptr<MMDMotionState>		m_activeMotionState;
 		std::unique_ptr<MMDMotionState>		m_kinematicMotionState;
@@ -93,8 +88,8 @@ namespace saba
 		MMDJoint(const MMDJoint& rhs) = delete;
 		MMDJoint& operator = (const MMDJoint& rhs) = delete;
 
-		bool CreateJoint(const PMDJointExt& pmdJoint, MMDRigidBody* rigidBodyA, MMDRigidBody* rigidBodyB);
-		bool CreateJoint(const PMXJoint& pmxJoint, MMDRigidBody* rigidBodyA, MMDRigidBody* rigidBodyB);
+		bool CreateJoint(const PMDJointExt& pmdJoint, const MMDRigidBody* rigidBodyA, const MMDRigidBody* rigidBodyB);
+		bool CreateJoint(const PMXJoint& pmxJoint, const MMDRigidBody* rigidBodyA, const MMDRigidBody* rigidBodyB);
 		void Destroy();
 
 		btTypedConstraint* GetConstraint() const;
@@ -119,12 +114,12 @@ namespace saba
 		float GetFPS() const;
 		void SetMaxSubStepCount(int numSteps);
 		int GetMaxSubStepCount() const;
-		void Update(float time);
+		void Update(float time) const;
 
-		void AddRigidBody(MMDRigidBody* mmdRB);
-		void RemoveRigidBody(MMDRigidBody* mmdRB);
-		void AddJoint(MMDJoint* mmdJoint);
-		void RemoveJoint(MMDJoint* mmdJoint);
+		void AddRigidBody(const MMDRigidBody* mmdRB) const;
+		void RemoveRigidBody(const MMDRigidBody* mmdRB) const;
+		void AddJoint(const MMDJoint* mmdJoint) const;
+		void RemoveJoint(const MMDJoint* mmdJoint) const;
 
 		btDiscreteDynamicsWorld* GetDynamicsWorld() const;
 

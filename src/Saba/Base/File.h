@@ -35,11 +35,11 @@ namespace saba
 		bool CreateText(const std::string& filepath) { return CreateText(filepath.c_str()); }
 
 		void Close();
-		bool IsOpen();
+		bool IsOpen() const;
 		Offset GetSize() const;
 		bool IsBad() const;
 		void ClearBadFlag();
-		bool IsEOF();
+		bool IsEOF() const;
 
 		FILE* GetFilePointer() const;
 
@@ -108,7 +108,6 @@ namespace saba
 	private:
 		bool OpenFile(const char* filepath, const char* mode);
 
-	private:
 		FILE*	m_fp;
 		Offset	m_fileSize;
 		bool	m_badFlag;
@@ -132,7 +131,7 @@ namespace saba
 		bool IsEof();
 
 	private:
-		saba::File	m_file;
+		File	m_file;
 	};
 }
 

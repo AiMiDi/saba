@@ -12,10 +12,10 @@ namespace saba
 {
 	namespace
 	{
-		void SetVMDBezier(VMDBezier& bezier, int x0, int x1, int y0, int y1)
+		void SetVMDBezier(VMDBezier& bezier, const int x0, const int x1, const int y0, const int y1)
 		{
-			bezier.m_cp1 = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
-			bezier.m_cp2 = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
+			bezier.m_cp1 = glm::vec2(static_cast<float>(x0) / 127.0f, static_cast<float>(y0) / 127.0f);
+			bezier.m_cp2 = glm::vec2(static_cast<float>(x1) / 127.0f, static_cast<float>(y1) / 127.0f);
 		}
 	} // namespace
 
@@ -25,14 +25,14 @@ namespace saba
 	{
 	}
 
-	void VMDCameraController::Evaluate(float t)
+	void VMDCameraController::Evaluate(const float t)
 	{
 		if (m_keys.empty())
 		{
 			return;
 		}
 
-		auto boundIt = FindBoundKey(m_keys, int32_t(t), m_startKeyIndex);
+		const auto boundIt = FindBoundKey(m_keys, static_cast<int32_t>(t), m_startKeyIndex);
 		if (boundIt == std::end(m_keys))
 		{
 			const auto& selectKey = m_keys[m_keys.size() - 1];
@@ -43,7 +43,7 @@ namespace saba
 		}
 		else
 		{
-			const auto& selectKey = (*boundIt);
+			const auto& selectKey = *boundIt;
 			m_camera.m_interest = selectKey.m_interest;
 			m_camera.m_rotate = selectKey.m_rotate;
 			m_camera.m_distance = selectKey.m_distance;
@@ -53,26 +53,26 @@ namespace saba
 				const auto& key0 = *(boundIt - 1);
 				const auto& key1 = *boundIt;
 
-				if ((key1.m_time - key0.m_time) > 1)
+				if (key1.m_time - key0.m_time > 1)
 				{
-					float timeRange = float(key1.m_time - key0.m_time);
-					float time = (t - float(key0.m_time)) / timeRange;
-					float ix_x = key0.m_ixBezier.FindBezierX(time);
-					float iy_x = key0.m_iyBezier.FindBezierX(time);
-					float iz_x = key0.m_izBezier.FindBezierX(time);
-					float rotate_x = key0.m_rotateBezier.FindBezierX(time);
-					float distance_x = key0.m_distanceBezier.FindBezierX(time);
-					float fov_x = key0.m_fovBezier.FindBezierX(time);
+					const auto timeRange = static_cast<float>(key1.m_time - key0.m_time);
+					const auto time = (t - static_cast<float>(key0.m_time)) / timeRange;
+					const auto ix_x = key0.m_ixBezier.FindBezierX(time);
+					const auto iy_x = key0.m_iyBezier.FindBezierX(time);
+					const auto iz_x = key0.m_izBezier.FindBezierX(time);
+					const auto rotate_x = key0.m_rotateBezier.FindBezierX(time);
+					const auto distance_x = key0.m_distanceBezier.FindBezierX(time);
+					const auto fov_x = key0.m_fovBezier.FindBezierX(time);
 
-					float ix_y = key0.m_ixBezier.EvalY(ix_x);
-					float iy_y = key0.m_iyBezier.EvalY(iy_x);
-					float iz_y = key0.m_izBezier.EvalY(iz_x);
-					float rotate_y = key0.m_rotateBezier.EvalY(rotate_x);
-					float distance_y = key0.m_distanceBezier.EvalY(distance_x);
-					float fov_y = key0.m_fovBezier.EvalY(fov_x);
+					const auto ix_y = key0.m_ixBezier.EvalY(ix_x);
+					const auto iy_y = key0.m_iyBezier.EvalY(iy_x);
+					const auto iz_y = key0.m_izBezier.EvalY(iz_x);
+					const auto rotate_y = key0.m_rotateBezier.EvalY(rotate_x);
+					const auto distance_y = key0.m_distanceBezier.EvalY(distance_x);
+					const auto fov_y = key0.m_fovBezier.EvalY(fov_x);
 
-					m_camera.m_interest = glm::mix(key0.m_interest, key1.m_interest, glm::vec3(ix_y, iy_y, iz_y));
-					m_camera.m_rotate = glm::mix(key0.m_rotate, key1.m_rotate, rotate_y);
+					m_camera.m_interest = mix(key0.m_interest, key1.m_interest, glm::vec3(ix_y, iy_y, iz_y));
+					m_camera.m_rotate = mix(key0.m_rotate, key1.m_rotate, rotate_y);
 					m_camera.m_distance = glm::mix(key0.m_distance, key1.m_distance, distance_y);
 					m_camera.m_fov = glm::mix(key0.m_fov, key1.m_fov, fov_y);
 				}
@@ -115,12 +115,12 @@ namespace saba
 			m_cameraController = std::make_unique<VMDCameraController>();
 			for (const auto& cam : vmd.m_cameras)
 			{
-				VMDCameraAnimationKey key;
-				key.m_time = int32_t(cam.m_frame);
+				VMDCameraAnimationKey key{};
+				key.m_time = static_cast<int32_t>(cam.m_frame);
 				key.m_interest = cam.m_interest * glm::vec3(1, 1, -1);
 				key.m_rotate = cam.m_rotate;
 				key.m_distance = cam.m_distance;
-				key.m_fov = glm::radians((float)cam.m_viewAngle);
+				key.m_fov = glm::radians(static_cast<float>(cam.m_viewAngle));
 
 				const uint8_t* ip = cam.m_interpolation.data();
 				SetVMDBezier(key.m_ixBezier, ip[0], ip[1], ip[2], ip[3]);
@@ -146,7 +146,7 @@ namespace saba
 		m_cameraController.reset();
 	}
 
-	void VMDCameraAnimation::Evaluate(float t)
+	void VMDCameraAnimation::Evaluate(const float t)
 	{
 		m_cameraController->Evaluate(t);
 		m_camera = m_cameraController->GetCamera();
