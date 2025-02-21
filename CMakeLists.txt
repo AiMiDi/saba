@@ -55,6 +55,8 @@ endif()
 # Install
 if (SABA_INSTALL)
     install (DIRECTORY src/Saba DESTINATION include  FILES_MATCHING PATTERN "*.h")
+    # copy glm to include
+    install (DIRECTORY external/glm/glm DESTINATION include)
     if (SABA_BUILD_MMD2OBJ)
         install (TARGETS mmd2obj RUNTIME DESTINATION bin)
     endif()
