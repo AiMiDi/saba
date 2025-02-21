@@ -32,9 +32,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${BULLET_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/external/stb/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/glm)
-include_directories(${PROJECT_SOURCE_DIR}/external/gli/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
 
 if(WIN32)

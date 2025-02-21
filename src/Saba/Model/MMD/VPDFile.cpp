@@ -151,8 +151,7 @@ namespace saba
 					return false;
 				}
 
-				auto delim7 = line.find_first_of(';', delim5);
-				if (std::string::npos == delim7)
+				if (auto delim7 = line.find_first_of(';', delim5); std::string::npos == delim7)
 				{
 					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
@@ -241,8 +240,7 @@ namespace saba
 			});
 
 			{
-				const auto& line = *lineIt;
-				if (line.find('}') == std::string::npos)
+				if (lineIt->find('}') == std::string::npos)
 				{
 					SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 					return false;
@@ -335,8 +333,7 @@ namespace saba
 				});
 
 				{
-					const auto& line2 = *lineIt;
-					if (line2.find('}') == std::string::npos)
+					if (lineIt->find('}') == std::string::npos)
 					{
 						SABA_INFO("VPD File Parse Error. {}:[Split error]", static_cast<size_t>(lineIt - lines.begin()));
 						return false;

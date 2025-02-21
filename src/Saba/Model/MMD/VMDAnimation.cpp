@@ -71,7 +71,7 @@ namespace saba
 
 	glm::vec2 VMDBezier::Eval(const float t) const
 	{
-		return glm::vec2(EvalX(t), EvalY(t));
+		return {EvalX(t), EvalY(t)};
 	}
 
 	float VMDBezier::FindBezierX(const float time) const
@@ -140,16 +140,16 @@ namespace saba
 				const auto& key0 = *(boundIt - 1);
 				const auto& key1 = *boundIt;
 
-				const float timeRange = static_cast<float>(key1.m_time - key0.m_time);
-				const float time = (t - static_cast<float>(key0.m_time)) / timeRange;
-				const float tx_x = key0.m_txBezier.FindBezierX(time);
-				const float ty_x = key0.m_tyBezier.FindBezierX(time);
-				const float tz_x = key0.m_tzBezier.FindBezierX(time);
-				const float rot_x = key0.m_rotBezier.FindBezierX(time);
-				const float tx_y = key0.m_txBezier.EvalY(tx_x);
-				const float ty_y = key0.m_tyBezier.EvalY(ty_x);
-				const float tz_y = key0.m_tzBezier.EvalY(tz_x);
-				const float rot_y = key0.m_rotBezier.EvalY(rot_x);
+				const auto timeRange = static_cast<float>(key1.m_time - key0.m_time);
+				const auto time = (t - static_cast<float>(key0.m_time)) / timeRange;
+				const auto tx_x = key0.m_txBezier.FindBezierX(time);
+				const auto ty_x = key0.m_tyBezier.FindBezierX(time);
+				const auto tz_x = key0.m_tzBezier.FindBezierX(time);
+				const auto rot_x = key0.m_rotBezier.FindBezierX(time);
+				const auto tx_y = key0.m_txBezier.EvalY(tx_x);
+				const auto ty_y = key0.m_tyBezier.EvalY(ty_x);
+				const auto tz_y = key0.m_tzBezier.EvalY(tz_x);
+				const auto rot_y = key0.m_rotBezier.EvalY(rot_x);
 
 				vt = mix(key0.m_translate, key1.m_translate, glm::vec3(tx_y, ty_y, tz_y));
 				q = slerp(key0.m_rotate, key1.m_rotate, rot_y);
@@ -227,7 +227,7 @@ namespace saba
 
 			if (nodeCtrl != nullptr)
 			{
-				VMDNodeAnimationKey key;
+				VMDNodeAnimationKey key{};
 				key.Set(motion);
 				nodeCtrl->AddKey(key);
 			}
@@ -276,7 +276,7 @@ namespace saba
 
 				if (ikCtrl != nullptr)
 				{
-					VMDIKAnimationKey key;
+					VMDIKAnimationKey key{};
 					key.m_time = static_cast<int32_t>(ik.m_frame);
 					key.m_enable = ikInfo.m_enable != 0;
 					ikCtrl->AddKey(key);
@@ -325,7 +325,7 @@ namespace saba
 
 			if (morphCtrl != nullptr)
 			{
-				VMDMorphAnimationKey key;
+				VMDMorphAnimationKey key{};
 				key.m_time = static_cast<int32_t>(morph.m_frame);
 				key.m_weight = morph.m_weight;
 				morphCtrl->AddKey(key);
@@ -474,7 +474,7 @@ namespace saba
 		}
 
 		const auto boundIt = FindBoundKey(m_keys, static_cast<int32_t>(t), m_startKeyIndex);
-		bool enable = true;
+		bool enable;
 		if (boundIt == std::end(m_keys))
 		{
 			enable = m_keys.rbegin()->m_enable;
@@ -554,8 +554,8 @@ namespace saba
 				const VMDMorphAnimationKey key0 = *(boundIt - 1);
 				const VMDMorphAnimationKey key1 = *boundIt;
 
-				const float timeRange = static_cast<float>(key1.m_time - key0.m_time);
-				const float time = (t - static_cast<float>(key0.m_time)) / timeRange;
+				const auto timeRange = static_cast<float>(key1.m_time - key0.m_time);
+				const auto time = (t - static_cast<float>(key0.m_time)) / timeRange;
 				weight = (key1.m_weight - key0.m_weight) * time + key0.m_weight;
 
 				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);

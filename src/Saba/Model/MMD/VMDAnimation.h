@@ -146,7 +146,7 @@ namespace saba
 		// Physics を同期させる
 		void SyncPhysics(float t, int frameCount = 30) const;
 
-		int32_t GetMaxKeyTime() const { return m_maxKeyTime; }
+		int32_t GetMaxKeyTime() const { return static_cast<int32_t>(m_maxKeyTime); }
 	private:
 		int32_t CalculateMaxKeyTime() const;
 
