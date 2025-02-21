@@ -592,6 +592,7 @@ namespace saba
 	};
 
 	bool ReadPMXFile(PMXFile* pmxFile, const char* filename);
+	bool WritePMXFile(const PMXFile* pmxFile, const char* filename);
 }
 
 #endif // !SABA_MODEL_PMXFILE_H_

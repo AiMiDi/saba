@@ -819,6 +819,758 @@ namespace saba
 
 			return true;
 		}
+
+		template <typename T>
+		bool Write(const T* val, File& file)
+		{
+			return file.Write(val);
+		}
+
+		template <typename T>
+		bool Write(const T* valArray, size_t size, File& file)
+		{
+			return file.Write(valArray, size);
+		}
+
+		bool WriteString(const PMXFile* pmx, const std::string& val, File& file)
+		{
+			uint32_t bufSize = static_cast<uint32_t>(val.size());
+			if (!Write(&bufSize, file))
+			{
+				return false;
+			}
+
+			if (bufSize > 0)
+			{
+				if (pmx->m_header.m_encode == 0)
+				{
+					// UTF-16
+					std::u16string utf16Str;
+					if (!ConvU8ToU16(val, utf16Str))
+					{
+						return false;
+					}
+					if (!file.Write(utf16Str.data(), utf16Str.size()))
+					{
+						return false;
+					}
+				}
+				else if (pmx->m_header.m_encode == 1)
+				{
+					// UTF-8
+					if (!file.Write(val.data(), val.size()))
+					{
+						return false;
+					}
+				}
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteIndex(const int32_t* index, const uint8_t indexSize, File& file)
+		{
+			switch (indexSize)
+			{
+			case 1:
+			{
+				uint8_t idx = (*index != -1) ? static_cast<uint8_t>(*index) : 0xFF;
+				Write(&idx, file);
+			}
+				break;
+			case 2:
+			{
+				uint16_t idx = (*index != -1) ? static_cast<uint16_t>(*index) : 0xFFFF;
+				Write(&idx, file);
+			}
+				break;
+			case 4:
+			{
+				uint32_t idx = static_cast<uint32_t>(*index);
+				Write(&idx, file);
+			}
+				break;
+			default:
+				return false;
+			}
+			return !file.IsBad();
+		}
+
+		bool WriteHeader(const PMXFile* pmxFile, File& file)
+		{
+			const auto& header = pmxFile->m_header;
+
+			Write(&header.m_magic, file);
+			Write(&header.m_version, file);
+
+			Write(&header.m_dataSize, file);
+
+			Write(&header.m_encode, file);
+			Write(&header.m_addUVNum, file);
+
+			Write(&header.m_vertexIndexSize, file);
+			Write(&header.m_textureIndexSize, file);
+			Write(&header.m_materialIndexSize, file);
+			Write(&header.m_boneIndexSize, file);
+			Write(&header.m_morphIndexSize, file);
+			Write(&header.m_rigidbodyIndexSize, file);
+
+			return !file.IsBad();
+		}
+
+		bool WriteInfo(const PMXFile* pmx, File& file)
+		{
+			const auto& info = pmx->m_info;
+
+			WriteString(pmx, info.m_modelName, file);
+			WriteString(pmx, info.m_englishModelName, file);
+			WriteString(pmx, info.m_comment, file);
+			WriteString(pmx, info.m_englishComment, file);
+
+			return !file.IsBad();
+		}
+
+		bool WriteVertex(const PMXFile* pmx, File& file)
+		{
+			int32_t vertexCount = static_cast<int32_t>(pmx->m_vertices.size());
+			if (!Write(&vertexCount, file))
+			{
+				return false;
+			}
+
+			const auto& vertices = pmx->m_vertices;
+			for (const auto& vertex : vertices)
+			{
+				Write(&vertex.m_position, file);
+				Write(&vertex.m_normal, file);
+				Write(&vertex.m_uv, file);
+
+				for (uint8_t i = 0; i < pmx->m_header.m_addUVNum; i++)
+				{
+					Write(&vertex.m_addUV[i], file);
+				}
+
+				Write(&vertex.m_weightType, file);
+
+				switch (vertex.m_weightType)
+				{
+				case PMXVertexWeight::BDEF1:
+					WriteIndex(&vertex.m_boneIndices[0], pmx->m_header.m_boneIndexSize, file);
+					break;
+				case PMXVertexWeight::BDEF2:
+					WriteIndex(&vertex.m_boneIndices[0], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[1], pmx->m_header.m_boneIndexSize, file);
+					Write(&vertex.m_boneWeights[0], file);
+					break;
+				case PMXVertexWeight::BDEF4:
+					WriteIndex(&vertex.m_boneIndices[0], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[1], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[2], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[3], pmx->m_header.m_boneIndexSize, file);
+					Write(&vertex.m_boneWeights[0], file);
+					Write(&vertex.m_boneWeights[1], file);
+					Write(&vertex.m_boneWeights[2], file);
+					Write(&vertex.m_boneWeights[3], file);
+					break;
+				case PMXVertexWeight::SDEF:
+					WriteIndex(&vertex.m_boneIndices[0], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[1], pmx->m_header.m_boneIndexSize, file);
+					Write(&vertex.m_boneWeights[0], file);
+					Write(&vertex.m_sdefC, file);
+					Write(&vertex.m_sdefR0, file);
+					Write(&vertex.m_sdefR1, file);
+					break;
+				case PMXVertexWeight::QDEF:
+					WriteIndex(&vertex.m_boneIndices[0], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[1], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[2], pmx->m_header.m_boneIndexSize, file);
+					WriteIndex(&vertex.m_boneIndices[3], pmx->m_header.m_boneIndexSize, file);
+					Write(&vertex.m_boneWeights[0], file);
+					Write(&vertex.m_boneWeights[1], file);
+					Write(&vertex.m_boneWeights[3], file);
+					Write(&vertex.m_boneWeights[4], file);
+					break;
+				default:
+					return false;
+				}
+				Write(&vertex.m_edgeMag, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteFace(const PMXFile* pmx, File& file)
+		{
+			int32_t faceCount = static_cast<int32_t>(pmx->m_faces.size()) * 3;
+			if (!Write(&faceCount, file))
+			{
+				return false;
+			}
+
+			switch (pmx->m_header.m_vertexIndexSize)
+			{
+			case 1:
+			{
+				std::vector<uint8_t> vertices(faceCount);
+				for (int32_t faceIdx = 0; faceIdx < faceCount / 3; faceIdx++)
+				{
+					vertices[faceIdx * 3 + 0] = static_cast<uint8_t>(pmx->m_faces[faceIdx].m_vertices[0]);
+					vertices[faceIdx * 3 + 1] = static_cast<uint8_t>(pmx->m_faces[faceIdx].m_vertices[1]);
+					vertices[faceIdx * 3 + 2] = static_cast<uint8_t>(pmx->m_faces[faceIdx].m_vertices[2]);
+				}
+				Write(vertices.data(), vertices.size(), file);
+			}
+				break;
+			case 2:
+			{
+				std::vector<uint16_t> vertices(faceCount);
+				for (int32_t faceIdx = 0; faceIdx < faceCount / 3; faceIdx++)
+				{
+					vertices[faceIdx * 3 + 0] = static_cast<uint16_t>(pmx->m_faces[faceIdx].m_vertices[0]);
+					vertices[faceIdx * 3 + 1] = static_cast<uint16_t>(pmx->m_faces[faceIdx].m_vertices[1]);
+					vertices[faceIdx * 3 + 2] = static_cast<uint16_t>(pmx->m_faces[faceIdx].m_vertices[2]);
+				}
+				Write(vertices.data(), vertices.size(), file);
+			}
+				break;
+			case 4:
+			{
+				std::vector<uint32_t> vertices(faceCount);
+				for (int32_t faceIdx = 0; faceIdx < faceCount / 3; faceIdx++)
+				{
+					vertices[faceIdx * 3 + 0] = static_cast<uint32_t>(pmx->m_faces[faceIdx].m_vertices[0]);
+					vertices[faceIdx * 3 + 1] = static_cast<uint32_t>(pmx->m_faces[faceIdx].m_vertices[1]);
+					vertices[faceIdx * 3 + 2] = static_cast<uint32_t>(pmx->m_faces[faceIdx].m_vertices[2]);
+				}
+				Write(vertices.data(), vertices.size(), file);
+			}
+				break;
+			default:
+				return false;
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteTexture(const PMXFile* pmx, File& file)
+		{
+			int32_t texCount = static_cast<int32_t>(pmx->m_textures.size());
+			if (!Write(&texCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& tex : pmx->m_textures)
+			{
+				WriteString(pmx, tex.m_textureName, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteMaterial(const PMXFile* pmx, File& file)
+		{
+			int32_t matCount = static_cast<int32_t>(pmx->m_materials.size());
+			if (!Write(&matCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& mat : pmx->m_materials)
+			{
+				WriteString(pmx, mat.m_name, file);
+				WriteString(pmx, mat.m_englishName, file);
+
+				Write(&mat.m_diffuse, file);
+				Write(&mat.m_specular, file);
+				Write(&mat.m_specularPower, file);
+				Write(&mat.m_ambient, file);
+
+				Write(&mat.m_drawMode, file);
+
+				Write(&mat.m_edgeColor, file);
+				Write(&mat.m_edgeSize, file);
+
+				WriteIndex(&mat.m_textureIndex, pmx->m_header.m_textureIndexSize, file);
+				WriteIndex(&mat.m_sphereTextureIndex, pmx->m_header.m_textureIndexSize, file);
+				Write(&mat.m_sphereMode, file);
+
+				Write(&mat.m_toonMode, file);
+				if (mat.m_toonMode == PMXToonMode::Separate)
+				{
+					WriteIndex(&mat.m_toonTextureIndex, pmx->m_header.m_textureIndexSize, file);
+				}
+				else if (mat.m_toonMode == PMXToonMode::Common)
+				{
+					uint8_t toonIndex = static_cast<uint8_t>(mat.m_toonTextureIndex);
+					Write(&toonIndex, file);
+				}
+				else
+				{
+					return false;
+				}
+
+				WriteString(pmx, mat.m_memo, file);
+
+				Write(&mat.m_numFaceVertices, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteBone(const PMXFile* pmx, File& file)
+		{
+			int32_t boneCount = static_cast<int32_t>(pmx->m_bones.size());
+			if (!Write(&boneCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& bone : pmx->m_bones)
+			{
+				WriteString(pmx, bone.m_name, file);
+				WriteString(pmx, bone.m_englishName, file);
+
+				Write(&bone.m_position, file);
+				WriteIndex(&bone.m_parentBoneIndex, pmx->m_header.m_boneIndexSize, file);
+				Write(&bone.m_deformDepth, file);
+
+				Write(&bone.m_boneFlag, file);
+
+				if ((static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::TargetShowMode)) == 0)
+				{
+					Write(&bone.m_positionOffset, file);
+				}
+				else
+				{
+					WriteIndex(&bone.m_linkBoneIndex, pmx->m_header.m_boneIndexSize, file);
+				}
+
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::AppendRotate) ||
+					static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::AppendTranslate))
+				{
+					WriteIndex(&bone.m_appendBoneIndex, pmx->m_header.m_boneIndexSize, file);
+					Write(&bone.m_appendWeight, file);
+				}
+
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::FixedAxis))
+				{
+					Write(&bone.m_fixedAxis, file);
+				}
+
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::LocalAxis))
+				{
+					Write(&bone.m_localXAxis, file);
+					Write(&bone.m_localZAxis, file);
+				}
+
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::DeformOuterParent))
+				{
+					Write(&bone.m_keyValue, file);
+				}
+
+				if (static_cast<uint16_t>(bone.m_boneFlag) & static_cast<uint16_t>(PMXBoneFlags::IK))
+				{
+					WriteIndex(&bone.m_ikTargetBoneIndex, pmx->m_header.m_boneIndexSize, file);
+					Write(&bone.m_ikIterationCount, file);
+					Write(&bone.m_ikLimit, file);
+
+					int32_t linkCount = static_cast<int32_t>(bone.m_ikLinks.size());
+					if (!Write(&linkCount, file))
+					{
+						return false;
+					}
+
+					for (const auto& ikLink : bone.m_ikLinks)
+					{
+						WriteIndex(&ikLink.m_ikBoneIndex, pmx->m_header.m_boneIndexSize, file);
+						Write(&ikLink.m_enableLimit, file);
+
+						if (ikLink.m_enableLimit != 0)
+						{
+							Write(&ikLink.m_limitMin, file);
+							Write(&ikLink.m_limitMax, file);
+						}
+					}
+				}
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteMorph(const PMXFile* pmx, File& file)
+		{
+			int32_t morphCount = static_cast<int32_t>(pmx->m_morphs.size());
+			if (!Write(&morphCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& morph : pmx->m_morphs)
+			{
+				WriteString(pmx, morph.m_name, file);
+				WriteString(pmx, morph.m_englishName, file);
+
+				Write(&morph.m_controlPanel, file);
+				Write(&morph.m_morphType, file);
+
+				int32_t dataCount;
+				if (!Write(&dataCount, file))
+				{
+					return false;
+				}
+
+				if (morph.m_morphType == PMXMorphType::Position)
+				{
+					for (const auto& data : morph.m_positionMorph)
+					{
+						WriteIndex(&data.m_vertexIndex, pmx->m_header.m_vertexIndexSize, file);
+						Write(&data.m_position, file);
+					}
+				}
+				else if (morph.m_morphType == PMXMorphType::UV ||
+					morph.m_morphType == PMXMorphType::AddUV1 ||
+					morph.m_morphType == PMXMorphType::AddUV2 ||
+					morph.m_morphType == PMXMorphType::AddUV3 ||
+					morph.m_morphType == PMXMorphType::AddUV4
+					)
+				{
+					for (const auto& data : morph.m_uvMorph)
+					{
+						WriteIndex(&data.m_vertexIndex, pmx->m_header.m_vertexIndexSize, file);
+						Write(&data.m_uv, file);
+					}
+				}
+				else if (morph.m_morphType == PMXMorphType::Bone)
+				{
+					for (const auto& data : morph.m_boneMorph)
+					{
+						WriteIndex(&data.m_boneIndex, pmx->m_header.m_boneIndexSize, file);
+						Write(&data.m_position, file);
+						Write(&data.m_quaternion, file);
+					}
+				}
+				else if (morph.m_morphType == PMXMorphType::Material)
+				{
+					for (const auto& data : morph.m_materialMorph)
+					{
+						WriteIndex(&data.m_materialIndex, pmx->m_header.m_materialIndexSize, file);
+						Write(&data.m_opType, file);
+						Write(&data.m_diffuse, file);
+						Write(&data.m_specular, file);
+						Write(&data.m_specularPower, file);
+						Write(&data.m_ambient, file);
+						Write(&data.m_edgeColor, file);
+						Write(&data.m_edgeSize, file);
+						Write(&data.m_textureFactor, file);
+						Write(&data.m_sphereTextureFactor, file);
+						Write(&data.m_toonTextureFactor, file);
+					}
+				}
+				else if (morph.m_morphType == PMXMorphType::Group)
+				{
+					for (const auto& data : morph.m_groupMorph)
+					{
+						WriteIndex(&data.m_morphIndex, pmx->m_header.m_morphIndexSize, file);
+						Write(&data.m_weight, file);
+					}
+				}
+				else if (morph.m_morphType == PMXMorphType::Flip)
+				{
+					for (const auto& data : morph.m_flipMorph)
+					{
+						WriteIndex(&data.m_morphIndex, pmx->m_header.m_morphIndexSize, file);
+						Write(&data.m_weight, file);
+					}
+				}
+				else if (morph.m_morphType == PMXMorphType::Impluse)
+				{
+					for (const auto& data : morph.m_impulseMorph)
+					{
+						WriteIndex(&data.m_rigidbodyIndex, pmx->m_header.m_rigidbodyIndexSize, file);
+						Write(&data.m_localFlag, file);
+						Write(&data.m_translateVelocity, file);
+						Write(&data.m_rotateTorque, file);
+					}
+				}
+				else
+				{
+					SABA_ERROR("Unsupported Morph Type:[{}]", static_cast<int>(morph.m_morphType));
+					return false;
+				}
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteDisplayFrame(const PMXFile* pmx, File& file)
+		{
+			int32_t displayFrameCount = static_cast<int32_t>(pmx->m_displayFrames.size());
+			if (!Write(&displayFrameCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& displayFrame : pmx->m_displayFrames)
+			{
+				WriteString(pmx, displayFrame.m_name, file);
+				WriteString(pmx, displayFrame.m_englishName, file);
+
+				Write(&displayFrame.m_flag, file);
+				int32_t targetCount = static_cast<int32_t>(displayFrame.m_targets.size());
+				if (!Write(&targetCount, file))
+				{
+					return false;
+				}
+				for (const auto& target : displayFrame.m_targets)
+				{
+					Write(&target.m_type, file);
+					if (target.m_type == PMXDisplayFrame::TargetType::BoneIndex)
+					{
+						WriteIndex(&target.m_index, pmx->m_header.m_boneIndexSize, file);
+					}
+					else if (target.m_type == PMXDisplayFrame::TargetType::MorphIndex)
+					{
+						WriteIndex(&target.m_index, pmx->m_header.m_morphIndexSize, file);
+					}
+					else
+					{
+						return false;
+					}
+				}
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteRigidbody(const PMXFile* pmx, File& file)
+		{
+			int32_t rbCount = static_cast<int32_t>(pmx->m_rigidbodies.size());
+			if (!Write(&rbCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& rb : pmx->m_rigidbodies)
+			{
+				WriteString(pmx, rb.m_name, file);
+				WriteString(pmx, rb.m_englishName, file);
+
+				WriteIndex(&rb.m_boneIndex, pmx->m_header.m_boneIndexSize, file);
+				Write(&rb.m_group, file);
+				Write(&rb.m_collisionGroup, file);
+
+				Write(&rb.m_shape, file);
+				Write(&rb.m_shapeSize, file);
+
+				Write(&rb.m_translate, file);
+				Write(&rb.m_rotate, file);
+
+				Write(&rb.m_mass, file);
+				Write(&rb.m_translateDimmer, file);
+				Write(&rb.m_rotateDimmer, file);
+				Write(&rb.m_repulsion, file);
+				Write(&rb.m_friction, file);
+
+				Write(&rb.m_op, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteJoint(const PMXFile* pmx, File& file)
+		{
+			int32_t jointCount = static_cast<int32_t>(pmx->m_joints.size());
+			if (!Write(&jointCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& joint : pmx->m_joints)
+			{
+				WriteString(pmx, joint.m_name, file);
+				WriteString(pmx, joint.m_englishName, file);
+
+				Write(&joint.m_type, file);
+				WriteIndex(&joint.m_rigidbodyAIndex, pmx->m_header.m_rigidbodyIndexSize, file);
+				WriteIndex(&joint.m_rigidbodyBIndex, pmx->m_header.m_rigidbodyIndexSize, file);
+
+				Write(&joint.m_translate, file);
+				Write(&joint.m_rotate, file);
+
+				Write(&joint.m_translateLowerLimit, file);
+				Write(&joint.m_translateUpperLimit, file);
+				Write(&joint.m_rotateLowerLimit, file);
+				Write(&joint.m_rotateUpperLimit, file);
+
+				Write(&joint.m_springTranslateFactor, file);
+				Write(&joint.m_springRotateFactor, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteSoftbody(const PMXFile* pmx, File& file)
+		{
+			int32_t sbCount = static_cast<int32_t>(pmx->m_softbodies.size());
+			if (!Write(&sbCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& sb : pmx->m_softbodies)
+			{
+				WriteString(pmx, sb.m_name, file);
+				WriteString(pmx, sb.m_englishName, file);
+
+				Write(&sb.m_type, file);
+
+				WriteIndex(&sb.m_materialIndex, pmx->m_header.m_materialIndexSize, file);
+
+				Write(&sb.m_group, file);
+				Write(&sb.m_collisionGroup, file);
+
+				Write(&sb.m_flag, file);
+
+				Write(&sb.m_BLinkLength, file);
+				Write(&sb.m_numClusters, file);
+
+				Write(&sb.m_totalMass, file);
+				Write(&sb.m_collisionMargin, file);
+
+				Write(&sb.m_aeroModel, file);
+
+				Write(&sb.m_VCF, file);
+				Write(&sb.m_DP, file);
+				Write(&sb.m_DG, file);
+				Write(&sb.m_LF, file);
+				Write(&sb.m_PR, file);
+				Write(&sb.m_VC, file);
+				Write(&sb.m_DF, file);
+				Write(&sb.m_MT, file);
+				Write(&sb.m_CHR, file);
+				Write(&sb.m_KHR, file);
+				Write(&sb.m_SHR, file);
+				Write(&sb.m_AHR, file);
+
+				Write(&sb.m_SRHR_CL, file);
+				Write(&sb.m_SKHR_CL, file);
+				Write(&sb.m_SSHR_CL, file);
+				Write(&sb.m_SR_SPLT_CL, file);
+				Write(&sb.m_SK_SPLT_CL, file);
+				Write(&sb.m_SS_SPLT_CL, file);
+
+				Write(&sb.m_V_IT, file);
+				Write(&sb.m_P_IT, file);
+				Write(&sb.m_D_IT, file);
+				Write(&sb.m_C_IT, file);
+
+				Write(&sb.m_LST, file);
+				Write(&sb.m_AST, file);
+				Write(&sb.m_VST, file);
+
+				int32_t arCount = static_cast<int32_t>(sb.m_anchorRigidbodies.size());
+				if (!Write(&arCount, file))
+				{
+					return false;
+				}
+				for (const auto& ar : sb.m_anchorRigidbodies)
+				{
+					WriteIndex(&ar.m_rigidBodyIndex, pmx->m_header.m_rigidbodyIndexSize, file);
+					WriteIndex(&ar.m_vertexIndex, pmx->m_header.m_vertexIndexSize, file);
+					Write(&ar.m_nearMode, file);
+				}
+
+				int32_t pvCount = static_cast<int32_t>(sb.m_pinVertexIndices.size());
+				if (!Write(&pvCount, file))
+				{
+					return false;
+				}
+				for (const auto& pv : sb.m_pinVertexIndices)
+				{
+					WriteIndex(&pv, pmx->m_header.m_vertexIndexSize, file);
+				}
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WritePMXFile(const PMXFile* pmxFile, File& file)
+		{
+			if (!WriteHeader(pmxFile, file))
+			{
+				SABA_ERROR("WriteHeader Fail.");
+				return false;
+			}
+
+			if (!WriteInfo(pmxFile, file))
+			{
+				SABA_ERROR("WriteInfo Fail.");
+				return false;
+			}
+
+			if (!WriteVertex(pmxFile, file))
+			{
+				SABA_ERROR("WriteVertex Fail.");
+				return false;
+			}
+
+			if (!WriteFace(pmxFile, file))
+			{
+				SABA_ERROR("WriteFace Fail.");
+				return false;
+			}
+
+			if (!WriteTexture(pmxFile, file))
+			{
+				SABA_ERROR("WriteTexture Fail.");
+				return false;
+			}
+
+			if (!WriteMaterial(pmxFile, file))
+			{
+				SABA_ERROR("WriteMaterial Fail.");
+				return false;
+			}
+
+			if (!WriteBone(pmxFile, file))
+			{
+				SABA_ERROR("WriteBone Fail.");
+				return false;
+			}
+
+			if (!WriteMorph(pmxFile, file))
+			{
+				SABA_ERROR("WriteMorph Fail.");
+				return false;
+			}
+
+			if (!WriteDisplayFrame(pmxFile, file))
+			{
+				SABA_ERROR("WriteDisplayFrame Fail.");
+				return false;
+			}
+
+			if (!WriteRigidbody(pmxFile, file))
+			{
+				SABA_ERROR("WriteRigidbody Fail.");
+				return false;
+			}
+
+			if (!WriteJoint(pmxFile, file))
+			{
+				SABA_ERROR("WriteJoint Fail.");
+				return false;
+			}
+
+			if (!WriteSoftbody(pmxFile, file))
+			{
+				SABA_ERROR("WriteSoftbody Fail.");
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	bool ReadPMXFile(PMXFile * pmxFile, const char* filename)
@@ -840,5 +1592,22 @@ namespace saba
 		return true;
 	}
 
+	bool WritePMXFile(const PMXFile* pmxFile, const char* filename)
+	{
+		File file;
+		if (!file.Create(filename))
+		{
+			SABA_INFO("PMX File Open Fail. {}", filename);
+			return false;
+		}
 
+		if (!WritePMXFile(pmxFile, file))
+		{
+			SABA_INFO("PMX File Write Fail. {}", filename);
+			return false;
+		}
+		SABA_INFO("PMX File Write Successed. {}", filename);
+
+		return true;
+	}
 }

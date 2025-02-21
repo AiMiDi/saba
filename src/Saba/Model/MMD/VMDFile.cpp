@@ -18,6 +18,12 @@ namespace saba
 			return file.Read(val);
 		}
 
+		template <typename T>
+		bool Write(const T* val, File& file)
+		{
+			return file.Write(val);
+		}
+
 		bool ReadHeader(VMDFile* vmd, File& file)
 		{
 			Read(&vmd->m_header.m_header, file);
@@ -31,6 +37,13 @@ namespace saba
 				return false;
 			}
 
+			return !file.IsBad();
+		}
+
+		bool WriteHeader(const VMDFile* vmd, File& file)
+		{
+			Write(&vmd->m_header.m_header, file);
+			Write(&vmd->m_header.m_modelName, file);
 			return !file.IsBad();
 		}
 
@@ -55,6 +68,26 @@ namespace saba
 			return !file.IsBad();
 		}
 
+		bool WriteMotion(const VMDFile* vmd, File& file)
+		{
+			uint32_t motionCount = static_cast<uint32_t>(vmd->m_motions.size());
+			if (!Write(&motionCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& motion : vmd->m_motions)
+			{
+				Write(&motion.m_boneName, file);
+				Write(&motion.m_frame, file);
+				Write(&motion.m_translate, file);
+				Write(&motion.m_quaternion, file);
+				Write(&motion.m_interpolation, file);
+			}
+
+			return !file.IsBad();
+		}
+
 		bool ReadBlendShape(VMDFile* vmd, File& file)
 		{
 			uint32_t blendShapeCount = 0;
@@ -69,6 +102,24 @@ namespace saba
 				Read(&m_blendShapeName, file);
 				Read(&m_frame, file);
 				Read(&m_weight, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteBlendShape(const VMDFile* vmd, File& file)
+		{
+			uint32_t blendShapeCount = static_cast<uint32_t>(vmd->m_morphs.size());
+			if (!Write(&blendShapeCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& morph : vmd->m_morphs)
+			{
+				Write(&morph.m_blendShapeName, file);
+				Write(&morph.m_frame, file);
+				Write(&morph.m_weight, file);
 			}
 
 			return !file.IsBad();
@@ -97,6 +148,28 @@ namespace saba
 			return !file.IsBad();
 		}
 
+		bool WriteCamera(const VMDFile* vmd, File& file)
+		{
+			uint32_t cameraCount = static_cast<uint32_t>(vmd->m_cameras.size());
+			if (!Write(&cameraCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& camera : vmd->m_cameras)
+			{
+				Write(&camera.m_frame, file);
+				Write(&camera.m_distance, file);
+				Write(&camera.m_interest, file);
+				Write(&camera.m_rotate, file);
+				Write(&camera.m_interpolation, file);
+				Write(&camera.m_viewAngle, file);
+				Write(&camera.m_isPerspective, file);
+			}
+
+			return !file.IsBad();
+		}
+
 		bool ReadLight(VMDFile* vmd, File& file)
 		{
 			uint32_t lightCount = 0;
@@ -116,6 +189,24 @@ namespace saba
 			return !file.IsBad();
 		}
 
+		bool WriteLight(const VMDFile* vmd, File& file)
+		{
+			uint32_t lightCount = static_cast<uint32_t>(vmd->m_lights.size());
+			if (!Write(&lightCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& light : vmd->m_lights)
+			{
+				Write(&light.m_frame, file);
+				Write(&light.m_color, file);
+				Write(&light.m_position, file);
+			}
+
+			return !file.IsBad();
+		}
+
 		bool ReadShadow(VMDFile* vmd, File& file)
 		{
 			uint32_t shadowCount = 0;
@@ -130,6 +221,24 @@ namespace saba
 				Read(&m_frame, file);
 				Read(&m_shadowType, file);
 				Read(&m_distance, file);
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteShadow(const VMDFile* vmd, File& file)
+		{
+			uint32_t shadowCount = static_cast<uint32_t>(vmd->m_shadows.size());
+			if (!Write(&shadowCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& shadow : vmd->m_shadows)
+			{
+				Write(&shadow.m_frame, file);
+				Write(&shadow.m_shadowType, file);
+				Write(&shadow.m_distance, file);
 			}
 
 			return !file.IsBad();
@@ -158,6 +267,33 @@ namespace saba
 				{
 					Read(&m_name, file);
 					Read(&m_enable, file);
+				}
+			}
+
+			return !file.IsBad();
+		}
+
+		bool WriteIK(const VMDFile* vmd, File& file)
+		{
+			uint32_t ikCount = static_cast<uint32_t>(vmd->m_iks.size());
+			if (!Write(&ikCount, file))
+			{
+				return false;
+			}
+
+			for (const auto& ik : vmd->m_iks)
+			{
+				Write(&ik.m_frame, file);
+				Write(&ik.m_show, file);
+				uint32_t ikInfoCount = static_cast<uint32_t>(ik.m_ikInfos.size());
+				if (!Write(&ikInfoCount, file))
+				{
+					return false;
+				}
+				for (const auto& ikInfo : ik.m_ikInfos)
+				{
+					Write(&ikInfo.m_name, file);
+					Write(&ikInfo.m_enable, file);
 				}
 			}
 
@@ -225,6 +361,53 @@ namespace saba
 
 			return true;
 		}
+
+		bool WriteVMDFile(const VMDFile* vmd, File& file)
+		{
+			if (!WriteHeader(vmd, file))
+			{
+				SABA_WARN("WriteHeader Fail.");
+				return false;
+			}
+
+			if (!WriteMotion(vmd, file))
+			{
+				SABA_WARN("WriteMotion Fail.");
+				return false;
+			}
+
+			if (!WriteBlendShape(vmd, file))
+			{
+				SABA_WARN("WriteBlendShape Fail.");
+				return false;
+			}
+
+			if (!WriteCamera(vmd, file))
+			{
+				SABA_WARN("WriteCamera Fail.");
+				return false;
+			}
+
+			if (!WriteLight(vmd, file))
+			{
+				SABA_WARN("WriteLight Fail.");
+				return false;
+			}
+
+			if (!WriteShadow(vmd, file))
+			{
+				SABA_WARN("WriteShadow Fail.");
+				return false;
+			}
+
+			if (!WriteIK(vmd, file))
+			{
+				SABA_WARN("WriteIK Fail.");
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	bool ReadVMDFile(VMDFile * vmd, const char * filename)
@@ -237,6 +420,18 @@ namespace saba
 		}
 
 		return ReadVMDFile(vmd, file);
+	}
+
+	bool WriteVMDFile(const VMDFile* vmd, const char* filename)
+	{
+		File file;
+		if (!file.Create(filename))
+		{
+			SABA_WARN("VMD File Open Fail. {}", filename);
+			return false;
+		}
+
+		return WriteVMDFile(vmd, file);
 	}
 
 }

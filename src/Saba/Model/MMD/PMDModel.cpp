@@ -208,30 +208,16 @@ namespace saba
 
 	void PMDModel::Update()
 	{
-		const auto* position = &m_positions[0];
-		const auto* normal = &m_normals[0];
 		const auto* bone = &m_bones[0];
 		const auto* boneWeight = &m_boneWeights[0];
 		auto* updatePosition = &m_updatePositions[0];
 		auto* updateNormal = &m_updateNormals[0];
 
-		// 頂点をコピー
-		auto srcPos = position;
-		auto srcNor = normal;
-		auto destPos = updatePosition;
-		auto destNor = updateNormal;
-		const size_t numVertices = m_positions.size();
-		for (size_t i = 0; i < numVertices; i++)
-		{
-			*destPos = *srcPos;
-			*destNor = *srcNor;
-			srcPos++;
-			srcNor++;
-			destPos++;
-			destNor++;
-		}
+		 // 顶点复制
+		std::copy(m_positions.begin(), m_positions.end(), m_updatePositions.begin());
+		std::copy(m_normals.begin(), m_normals.end(), m_updateNormals.begin());
 
-		// Morph の処理
+		// Morph 处理
 		if (m_baseMorph.m_vertices.empty())
 		{
 			for (const auto& morph : *m_morphMan.GetMorphs())
@@ -268,14 +254,14 @@ namespace saba
 			}
 		}
 
-		// スキンメッシュに使用する変形マトリクスを事前計算
+		 // スキンメッシュに使用する変形マトリクスを事前計算
 		const auto& nodes = *m_nodeMan.GetNodes();
 		for (size_t i = 0; i < nodes.size(); i++)
 		{
 			m_transforms[i] = nodes[i]->GetGlobalTransform() * nodes[i]->GetInverseInitTransform();
 		}
 
-		for (size_t i = 0; i < numVertices; i++)
+		for (size_t i = 0; i < m_positions.size(); i++)
 		{
 			const auto w0 = boneWeight->x;
 			const auto w1 = boneWeight->y;

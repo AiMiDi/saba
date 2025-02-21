@@ -6,6 +6,7 @@
 #include "VMDCameraAnimation.h"
 #include "VMDAnimationCommon.h"
 
+#include <cstdint>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace saba
@@ -138,6 +139,24 @@ namespace saba
 			return false;
 		}
 		return true;
+	}
+
+	int32_t VMDCameraController::GetStartFrame() const
+	{
+		if (m_keys.empty())
+		{
+			return 0;
+		}
+		return m_keys.front().m_time;
+	}
+
+	int32_t VMDCameraController::GetLastFrame() const
+	{
+		if (m_keys.empty())
+		{
+			return 0;
+		}
+		return m_keys.back().m_time;
 	}
 
 	void VMDCameraAnimation::Destroy()

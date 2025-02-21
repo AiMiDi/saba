@@ -191,7 +191,7 @@ namespace saba
 	};
 
 	bool ReadPMDFile(PMDFile* pmdFile, const char* filename);
-
+	bool WritePMDFile(const PMDFile* pmdFile, const char* filename);
 }
 
 #endif // !SABA_MODEL_MMD_PMDFILE_H_

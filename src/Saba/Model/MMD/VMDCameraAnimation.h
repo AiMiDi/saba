@@ -9,6 +9,7 @@
 #include "MMDCamera.h"
 #include "VMDAnimation.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 
@@ -39,6 +40,10 @@ namespace saba
 
 		void Evaluate(float t);
 		const MMDCamera& GetCamera() const { return m_camera; }
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
+		size_t GetFrameCount() const { return m_keys.size(); }
+		int32_t GetStartFrame() const;
+		int32_t GetLastFrame() const;
 
 		void AddKey(const KeyType& key)
 		{
@@ -63,6 +68,9 @@ namespace saba
 		void Evaluate(float t);
 
 		const MMDCamera& GetCamera() const { return m_camera; }
+		size_t GetFrameCount() const { return m_cameraController->GetFrameCount(); }
+		int32_t GetStartFrame() const { return m_cameraController->GetStartFrame(); }
+		int32_t GetLastFrame() const { return m_cameraController->GetLastFrame(); }
 
 	private:
 		using CameraControllerPtr = std::unique_ptr<VMDCameraController>;
