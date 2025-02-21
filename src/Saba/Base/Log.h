@@ -15,12 +15,15 @@
 
 namespace saba
 {
-	class DefaultSink final : public spdlog::sinks::sink
+	class DefaultSink : public spdlog::sinks::sink
 	{
 	public:
 		DefaultSink();
 		void log(const spdlog::details::log_msg& msg) override;
 		void flush() override;
+		void set_pattern(const std::string& pattern) override;
+		void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) override;
+
 	private:
 		std::shared_ptr<spdlog::logger>	m_defaultLogger;
 	};

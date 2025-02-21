@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-project(saba)
+project(saba CXX)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 option (SABA_BUILD_MMD2OBJ "Build mmd2obj." off)
@@ -32,8 +32,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${BULLET_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/external/glm)
-include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
 
 if(WIN32)
     ADD_DEFINITIONS(-DUNICODE)
@@ -41,11 +39,13 @@ if(WIN32)
 endif(WIN32)
 
 if(MSVC)
-    ADD_DEFINITIONS(/MP)
+    ADD_DEFINITIONS(/MP /utf-8)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(gtests)
+if(SABA_ENABLE_TEST)
+    add_subdirectory(gtests)
+endif ()
 
 if (SABA_BUILD_MMD2OBJ)
     add_executable(mmd2obj mmd2obj.cpp)
@@ -55,8 +55,6 @@ endif()
 # Install
 if (SABA_INSTALL)
     install (DIRECTORY src/Saba DESTINATION include  FILES_MATCHING PATTERN "*.h")
-    # copy glm to include
-    install (DIRECTORY external/glm/glm DESTINATION include)
     if (SABA_BUILD_MMD2OBJ)
         install (TARGETS mmd2obj RUNTIME DESTINATION bin)
     endif()

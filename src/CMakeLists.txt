@@ -99,6 +99,9 @@ add_library(
     ${MODEL_MMD_HEADER}
 )
 
+target_include_directories(Saba PUBLIC ${PROJECT_SOURCE_DIR}/external/glm)
+target_include_directories(Saba PRIVATE ${PROJECT_SOURCE_DIR}/external/spdlog/include)
+
 if (SABA_BUILD_OBJ_MODEL)
     target_include_directories(Saba PRIVATE ${PROJECT_SOURCE_DIR}/external/tinyobjloader/include)
 endif ()
