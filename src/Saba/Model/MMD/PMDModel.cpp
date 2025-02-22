@@ -45,6 +45,16 @@ namespace saba
 		}
 	}
 
+	struct PMDModel::MorphVertex
+	{
+		uint32_t	m_index;
+		glm::vec3	m_position;
+
+		explicit  MorphVertex(const uint32_t index = 0, const glm::vec3& position = glm::vec3{0})
+			: m_index(index)
+			, m_position(position){}
+	};
+
 	void PMDModel::InitializeAnimation()
 	{
 		ClearBaseAnimation();
@@ -417,7 +427,7 @@ namespace saba
 
 		for (const auto& [m_morphName, m_morphType, m_vertices, m_englishShapeNameExt] : pmd.m_morphs)
 		{
-			PMDMorph* morph = nullptr;
+			PMDMorph* morph;
 			if (m_morphType == saba::PMDMorph::Base)
 			{
 				morph = &m_baseMorph;
@@ -431,10 +441,7 @@ namespace saba
 			morph->m_vertices.reserve(m_vertices.size());
 			for (const auto [m_vertexIndex, m_position] : m_vertices)
 			{
-				MorphVertex morphVtx{};
-				morphVtx.m_index = m_vertexIndex;
-				morphVtx.m_position = m_position * glm::vec3(1, 1, -1);
-				morph->m_vertices.push_back(morphVtx);
+				morph->m_vertices.emplace_back(m_vertexIndex, m_position * glm::vec3(1, 1, -1));
 			}
 		}
 

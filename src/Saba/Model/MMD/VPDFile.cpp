@@ -63,7 +63,7 @@ namespace saba
 			SABA_INFO("VPD File Parse Error.[num bones]");
 			return false;
 		}
-		int numBones = 0;
+		int numBones;
 		try
 		{
 			const auto& line = *lineIt;
@@ -85,7 +85,7 @@ namespace saba
 		int boneCount = 0;
 		while (boneCount < numBones && lineIt != lines.end())
 		{
-			int boneIdx = 0;
+			int boneIdx;
 			{
 				const auto& line = *lineIt;
 				auto delimPos1 = line.find("Bone");

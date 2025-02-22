@@ -70,7 +70,7 @@ namespace saba
 
 		bool WriteMotion(const VMDFile* vmd, File& file)
 		{
-			uint32_t motionCount = static_cast<uint32_t>(vmd->m_motions.size());
+			const auto motionCount = static_cast<uint32_t>(vmd->m_motions.size());
 			if (!Write(&motionCount, file))
 			{
 				return false;
@@ -109,7 +109,7 @@ namespace saba
 
 		bool WriteBlendShape(const VMDFile* vmd, File& file)
 		{
-			uint32_t blendShapeCount = static_cast<uint32_t>(vmd->m_morphs.size());
+			const auto blendShapeCount = static_cast<uint32_t>(vmd->m_morphs.size());
 			if (!Write(&blendShapeCount, file))
 			{
 				return false;
@@ -150,7 +150,7 @@ namespace saba
 
 		bool WriteCamera(const VMDFile* vmd, File& file)
 		{
-			uint32_t cameraCount = static_cast<uint32_t>(vmd->m_cameras.size());
+			const auto cameraCount = static_cast<uint32_t>(vmd->m_cameras.size());
 			if (!Write(&cameraCount, file))
 			{
 				return false;
@@ -191,7 +191,7 @@ namespace saba
 
 		bool WriteLight(const VMDFile* vmd, File& file)
 		{
-			uint32_t lightCount = static_cast<uint32_t>(vmd->m_lights.size());
+			const auto lightCount = static_cast<uint32_t>(vmd->m_lights.size());
 			if (!Write(&lightCount, file))
 			{
 				return false;
@@ -228,7 +228,7 @@ namespace saba
 
 		bool WriteShadow(const VMDFile* vmd, File& file)
 		{
-			uint32_t shadowCount = static_cast<uint32_t>(vmd->m_shadows.size());
+			const auto shadowCount = static_cast<uint32_t>(vmd->m_shadows.size());
 			if (!Write(&shadowCount, file))
 			{
 				return false;
@@ -275,7 +275,7 @@ namespace saba
 
 		bool WriteIK(const VMDFile* vmd, File& file)
 		{
-			uint32_t ikCount = static_cast<uint32_t>(vmd->m_iks.size());
+			const auto ikCount = static_cast<uint32_t>(vmd->m_iks.size());
 			if (!Write(&ikCount, file))
 			{
 				return false;
@@ -285,7 +285,7 @@ namespace saba
 			{
 				Write(&ik.m_frame, file);
 				Write(&ik.m_show, file);
-				uint32_t ikInfoCount = static_cast<uint32_t>(ik.m_ikInfos.size());
+				const auto ikInfoCount = static_cast<uint32_t>(ik.m_ikInfos.size());
 				if (!Write(&ikInfoCount, file))
 				{
 					return false;

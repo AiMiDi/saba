@@ -13,38 +13,45 @@
 
 namespace saba
 {
+	/**
+	 * @brief Represents a material in MMD.
+	 */
 	struct MMDMaterial
 	{
 		MMDMaterial();
+
+		/**
+		 * @brief Enum for sphere texture mode.
+		 */
 		enum class SphereTextureMode
 		{
-			None,
-			Mul,
-			Add,
+			None, ///< No sphere texture
+			Mul,  ///< Multiply mode
+			Add,  ///< Add mode
 		};
 
-		glm::vec3		m_diffuse;
-		float			m_alpha;
-		glm::vec3		m_specular;
-		float			m_specularPower;
-		glm::vec3		m_ambient;
-		uint8_t			m_edgeFlag;
-		float			m_edgeSize;
-		glm::vec4		m_edgeColor;
-		std::string		m_texture;
-		std::string		m_spTexture;
-		SphereTextureMode	m_spTextureMode;
-		std::string		m_toonTexture;
-		glm::vec4		m_textureMulFactor;
-		glm::vec4		m_spTextureMulFactor;
-		glm::vec4		m_toonTextureMulFactor;
-		glm::vec4		m_textureAddFactor;
-		glm::vec4		m_spTextureAddFactor;
-		glm::vec4		m_toonTextureAddFactor;
-		bool			m_bothFace;
-		bool			m_groundShadow;
-		bool			m_shadowCaster;
-		bool			m_shadowReceiver;
+		glm::vec3		m_diffuse; ///< Diffuse color
+		float			m_alpha; ///< Alpha value
+		glm::vec3		m_specular; ///< Specular color
+		float			m_specularPower; ///< Specular power
+		glm::vec3		m_ambient; ///< Ambient color
+		uint8_t			m_edgeFlag; ///< Edge flag
+		float			m_edgeSize; ///< Edge size
+		glm::vec4		m_edgeColor; ///< Edge color
+		std::string		m_texture; ///< Texture file path
+		std::string		m_spTexture; ///< Sphere texture file path
+		SphereTextureMode	m_spTextureMode; ///< Sphere texture mode
+		std::string		m_toonTexture; ///< Toon texture file path
+		glm::vec4		m_textureMulFactor; ///< Texture multiply factor
+		glm::vec4		m_spTextureMulFactor; ///< Sphere texture multiply factor
+		glm::vec4		m_toonTextureMulFactor; ///< Toon texture multiply factor
+		glm::vec4		m_textureAddFactor; ///< Texture add factor
+		glm::vec4		m_spTextureAddFactor; ///< Sphere texture add factor
+		glm::vec4		m_toonTextureAddFactor; ///< Toon texture add factor
+		bool			m_bothFace; ///< Both face flag
+		bool			m_groundShadow; ///< Ground shadow flag
+		bool			m_shadowCaster; ///< Shadow caster flag
+		bool			m_shadowReceiver; ///< Shadow receiver flag
 	};
 }
 

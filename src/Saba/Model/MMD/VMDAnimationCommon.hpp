@@ -11,6 +11,14 @@
 
 namespace saba
 {
+	/**
+	 * @brief Find the bound key in a vector of keys.
+	 * @tparam KeyType Type of the key.
+	 * @param keys Vector of keys.
+	 * @param t Time to find the bound key for.
+	 * @param startIdx Starting index for the search.
+	 * @return Iterator to the bound key.
+	 */
 	template <typename KeyType>
 	typename std::vector<KeyType>::const_iterator FindBoundKey(
 		const std::vector<KeyType>&	keys,

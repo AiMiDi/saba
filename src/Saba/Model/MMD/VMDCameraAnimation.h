@@ -15,62 +15,47 @@
 
 namespace saba
 {
-	struct VMDCameraAnimationKey
-	{
-		int32_t		m_time;
-		glm::vec3	m_interest;
-		glm::vec3	m_rotate;
-		float		m_distance;
-		float		m_fov;
-
-		VMDBezier	m_ixBezier;
-		VMDBezier	m_iyBezier;
-		VMDBezier	m_izBezier;
-		VMDBezier	m_rotateBezier;
-		VMDBezier	m_distanceBezier;
-		VMDBezier	m_fovBezier;
-	};
-
-	class VMDCameraController
-	{
-	public:
-		using KeyType = VMDCameraAnimationKey;
-
-		VMDCameraController();
-
-		void Evaluate(float t);
-		const MMDCamera& GetCamera() const { return m_camera; }
-		const std::vector<KeyType>& GetKeys() const { return m_keys; }
-		size_t GetFrameCount() const { return m_keys.size(); }
-		int32_t GetStartFrame() const;
-		int32_t GetLastFrame() const;
-
-		void AddKey(const KeyType& key)
-		{
-			m_keys.push_back(key);
-		}
-		void SortKeys();
-
-	private:
-		std::vector<VMDCameraAnimationKey>	m_keys;
-		MMDCamera							m_camera;
-		size_t								m_startKeyIndex;
-	};
-
+	class VMDCameraController;
 	class VMDCameraAnimation
 	{
 	public:
 		VMDCameraAnimation();
 
+		/**
+		 * @brief Create the VMD camera animation from a VMD file.
+		 * @param vmd Reference to the VMD file.
+		 * @return True if creation is successful, false otherwise.
+		 */
 		bool Create(const VMDFile& vmd);
+
+		/**
+		 * @brief Destroy the VMD camera animation.
+		 */
 		void Destroy();
 
+		/**
+		 * @brief Evaluate the camera animation at a given time.
+		 * @param t Time to evaluate the animation.
+		 */
 		void Evaluate(float t);
 
+		/**
+		 * @brief Get the camera.
+		 * @return Reference to the camera.
+		 */
 		const MMDCamera& GetCamera() const { return m_camera; }
-		size_t GetFrameCount() const { return m_cameraController->GetFrameCount(); }
-		int32_t GetStartFrame() const { return m_cameraController->GetStartFrame(); }
-		int32_t GetLastFrame() const { return m_cameraController->GetLastFrame(); }
+
+		/**
+		 * @brief Get the number of keys in the animation.
+		 * @return Number of keys.
+		 */
+		size_t GetKeyCount() const;
+
+		/**
+		 * @brief Get the maximum key time in the animation.
+		 * @return Maximum key time.
+		 */
+		int32_t GetMaxKeyTime() const;
 
 	private:
 		using CameraControllerPtr = std::unique_ptr<VMDCameraController>;

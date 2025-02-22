@@ -4,7 +4,7 @@
 //
 
 #include "VMDAnimation.h"
-#include "VMDAnimationCommon.h"
+#include "VMDAnimationCommon.hpp"
 
 #include <Saba/Base/Log.h>
 
@@ -97,6 +97,107 @@ namespace saba
 
 		return t;
 	}
+
+	struct VMDNodeAnimationKey
+	{
+		void Set(const VMDMotion& motion);
+
+		int32_t		m_time;
+		glm::vec3	m_translate;
+		glm::quat	m_rotate;
+
+		VMDBezier	m_txBezier;
+		VMDBezier	m_tyBezier;
+		VMDBezier	m_tzBezier;
+		VMDBezier	m_rotBezier;
+	};
+
+	struct VMDMorphAnimationKey
+	{
+		int32_t	m_time;
+		float	m_weight;
+	};
+
+	struct VMDIKAnimationKey
+	{
+		int32_t	m_time;
+		bool	m_enable;
+	};
+
+	class VMDNodeController
+	{
+	public:
+		using KeyType = VMDNodeAnimationKey;
+
+		VMDNodeController();
+
+		void SetNode(MMDNode* node);
+		void Evaluate(float t, float weight = 1.0f);
+		
+		void AddKey(const KeyType& key)
+		{
+			m_keys.push_back(key);
+		}
+		void SortKeys();
+		const  std::vector<KeyType>& GetKeys() const { return m_keys; }
+
+		MMDNode* GetNode() const { return m_node; }
+
+	private:
+		MMDNode*				m_node;
+		std::vector<KeyType>	m_keys;
+		size_t					m_startKeyIndex;
+	};
+
+	class VMDMorphController
+	{
+	public:
+		using KeyType = VMDMorphAnimationKey;
+
+		VMDMorphController();
+
+		void SetBlendKeyShape(MMDMorph* morph);
+		void Evaluate(float t, float animWeight = 1.0f);
+
+		void AddKey(const KeyType& key)
+		{
+			m_keys.push_back(key);
+		}
+		void SortKeys();
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
+
+		MMDMorph* GetMorph() const { return m_morph; }
+
+	private:
+		MMDMorph*				m_morph;
+		std::vector<KeyType>	m_keys;
+		size_t					m_startKeyIndex;
+	};
+
+	class VMDIKController
+	{
+	public:
+		using KeyType = VMDIKAnimationKey;
+
+		VMDIKController();
+
+		void SetIKSolver(MMDIkSolver* ikSolver);
+		void Evaluate(float t, float weight = 1.0f);
+
+		void AddKey(const KeyType& key)
+		{
+			m_keys.push_back(key);
+		}
+		void SortKeys();
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
+
+		MMDIkSolver* GetIkSolver() const { return m_ikSolver; }
+
+	private:
+		MMDIkSolver*			m_ikSolver;
+		std::vector<KeyType>	m_keys;
+		size_t					m_startKeyIndex;
+	};
 
 	VMDNodeController::VMDNodeController()
 		: m_node(nullptr)
@@ -373,31 +474,30 @@ namespace saba
 
 	void VMDAnimation::SyncPhysics(const float t, const int frameCount) const
 	{
-		/*
-		すぐにアニメーションを反映すると、Physics が破たんする場合がある。
-		例：足がスカートを突き破る等
-		アニメーションを反映する際、初期状態から数フレームかけて、
-		目的のポーズへ遷移させる。
-		*/
-		m_model->SaveBaseAnimation();
+	/*
+		Immediate application of animation can cause physics to break.
+		Example: Legs breaking through the skirt, etc.
+		When applying animation, transition to the target pose over several frames from the initial state.
+	*/
+	m_model->SaveBaseAnimation();
 
-		// Physicsを反映する
-		for (int i = 0; i < frameCount; i++)
-		{
-			m_model->BeginAnimation();
+	// Apply physics
+	for (int i = 0; i < frameCount; i++)
+	{
+		m_model->BeginAnimation();
 
-			Evaluate(t, static_cast<float>(1 + i) / static_cast<float>(frameCount));
+		Evaluate(t, static_cast<float>(1 + i) / static_cast<float>(frameCount));
 
-			m_model->UpdateMorphAnimation();
+		m_model->UpdateMorphAnimation();
 
-			m_model->UpdateNodeAnimation(false);
+		m_model->UpdateNodeAnimation(false);
 
-			m_model->UpdatePhysicsAnimation(1.0f / 30.0f);
+		m_model->UpdatePhysicsAnimation(1.0f / 30.0f);
 
-			m_model->UpdateNodeAnimation(true);
+		m_model->UpdateNodeAnimation(true);
 
-			m_model->EndAnimation();
-		}
+		m_model->EndAnimation();
+	}
 	}
 
 	int32_t VMDAnimation::CalculateMaxKeyTime() const

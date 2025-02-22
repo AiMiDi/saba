@@ -10,23 +10,33 @@
 
 namespace saba
 {
+	/**
+	 * @brief Represents a camera in MMD.
+	 */
 	struct MMDCamera
 	{
 		MMDCamera();
 
-		glm::vec3	m_interest{};
-		glm::vec3	m_rotate{};
-		float		m_distance{};
-		float		m_fov{};
+		glm::vec3	m_interest{}; ///< Interest point
+		glm::vec3	m_rotate{}; ///< Rotation
+		float		m_distance{}; ///< Distance
+		float		m_fov{}; ///< Field of view
 	};
 
+	/**
+	 * @brief Represents a look-at camera in MMD.
+	 */
 	struct MMDLookAtCamera
 	{
+		/**
+		 * @brief Construct a look-at camera from MMDCamera.
+		 * @param cam Reference to the MMDCamera.
+		 */
 		explicit MMDLookAtCamera(const MMDCamera& cam);
 
-		glm::vec3	m_center{};
-		glm::vec3	m_eye{};
-		glm::vec3	m_up{};
+		glm::vec3	m_center{}; ///< Center point
+		glm::vec3	m_eye{}; ///< Eye point
+		glm::vec3	m_up{}; ///< Up vector
 	};
 }
 

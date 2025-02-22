@@ -19,133 +19,92 @@
 
 namespace saba
 {
+	/**
+	 * @brief Represents a Bezier curve used in VMD animation.
+	 */
 	struct VMDBezier
 	{
+		/**
+		 * @brief Evaluate the X component of the Bezier curve at time t.
+		 * @param t The time parameter.
+		 * @return The evaluated X component.
+		 */
 		float EvalX(float t) const;
+
+		/**
+		 * @brief Evaluate the Y component of the Bezier curve at time t.
+		 * @param t The time parameter.
+		 * @return The evaluated Y component.
+		 */
 		float EvalY(float t) const;
+
+		/**
+		 * @brief Evaluate both X and Y components of the Bezier curve at time t.
+		 * @param t The time parameter.
+		 * @return The evaluated X and Y components as a glm::vec2.
+		 */
 		glm::vec2 Eval(float t) const;
 
+		/**
+		 * @brief Find the X component of the Bezier curve at a given time.
+		 * @param time The time parameter.
+		 * @return The X component at the given time.
+		 */
 		float FindBezierX(float time) const;
 
-		glm::vec2	m_cp1;
-		glm::vec2	m_cp2;
+		glm::vec2	m_cp1; ///< Control point 1
+		glm::vec2	m_cp2; ///< Control point 2
 	};
 
-	struct VMDNodeAnimationKey
-	{
-		void Set(const VMDMotion& motion);
+	class VMDNodeController;
+	class VMDMorphController;
+	class VMDIKController;
 
-		int32_t		m_time;
-		glm::vec3	m_translate;
-		glm::quat	m_rotate;
-
-		VMDBezier	m_txBezier;
-		VMDBezier	m_tyBezier;
-		VMDBezier	m_tzBezier;
-		VMDBezier	m_rotBezier;
-	};
-
-	struct VMDMorphAnimationKey
-	{
-		int32_t	m_time;
-		float	m_weight;
-	};
-
-	struct VMDIKAnimationKey
-	{
-		int32_t	m_time;
-		bool	m_enable;
-	};
-
-	class VMDNodeController
-	{
-	public:
-		using KeyType = VMDNodeAnimationKey;
-
-		VMDNodeController();
-
-		void SetNode(MMDNode* node);
-		void Evaluate(float t, float weight = 1.0f);
-		
-		void AddKey(const KeyType& key)
-		{
-			m_keys.push_back(key);
-		}
-		void SortKeys();
-		const  std::vector<KeyType>& GetKeys() const { return m_keys; }
-
-		MMDNode* GetNode() const { return m_node; }
-
-	private:
-		MMDNode*				m_node;
-		std::vector<KeyType>	m_keys;
-		size_t					m_startKeyIndex;
-	};
-
-	class VMDMorphController
-	{
-	public:
-		using KeyType = VMDMorphAnimationKey;
-
-		VMDMorphController();
-
-		void SetBlendKeyShape(MMDMorph* morph);
-		void Evaluate(float t, float animWeight = 1.0f);
-
-		void AddKey(const KeyType& key)
-		{
-			m_keys.push_back(key);
-		}
-		void SortKeys();
-		const std::vector<KeyType>& GetKeys() const { return m_keys; }
-
-		MMDMorph* GetMorph() const { return m_morph; }
-
-	private:
-		MMDMorph*				m_morph;
-		std::vector<KeyType>	m_keys;
-		size_t					m_startKeyIndex;
-	};
-
-	class VMDIKController
-	{
-	public:
-		using KeyType = VMDIKAnimationKey;
-
-		VMDIKController();
-
-		void SetIKSolver(MMDIkSolver* ikSolver);
-		void Evaluate(float t, float weight = 1.0f);
-
-		void AddKey(const KeyType& key)
-		{
-			m_keys.push_back(key);
-		}
-		void SortKeys();
-		const std::vector<KeyType>& GetKeys() const { return m_keys; }
-
-		MMDIkSolver* GetIkSolver() const { return m_ikSolver; }
-
-	private:
-		MMDIkSolver*			m_ikSolver;
-		std::vector<KeyType>	m_keys;
-		size_t					m_startKeyIndex;
-	};
-
+	/**
+	 * @brief Manages VMD animation for an MMD model.
+	 */
 	class VMDAnimation
 	{
 	public:
 		VMDAnimation();
 
+		/**
+		 * @brief Create the VMD animation with the given MMD model.
+		 * @param model The MMD model.
+		 * @return True if creation is successful, false otherwise.
+		 */
 		bool Create(const std::shared_ptr<MMDModel>& model);
+
+		/**
+		 * @brief Add a VMD file to the animation.
+		 * @param vmd The VMD file.
+		 * @return True if addition is successful, false otherwise.
+		 */
 		bool Add(const VMDFile& vmd);
+
+		/**
+		 * @brief Destroy the VMD animation.
+		 */
 		void Destroy();
 
+		/**
+		 * @brief Evaluate the animation at time t with the given weight.
+		 * @param t The time parameter.
+		 * @param weight The weight parameter.
+		 */
 		void Evaluate(float t, float weight = 1.0f) const;
 
-		// Physics を同期させる
+		/**
+		 * @brief Synchronize physics with the animation.
+		 * @param t The time parameter.
+		 * @param frameCount The number of frames to synchronize over.
+		 */
 		void SyncPhysics(float t, int frameCount = 30) const;
 
+		/**
+		 * @brief Get the maximum key time of the animation.
+		 * @return The maximum key time.
+		 */
 		int32_t GetMaxKeyTime() const { return static_cast<int32_t>(m_maxKeyTime); }
 	private:
 		int32_t CalculateMaxKeyTime() const;
@@ -154,11 +113,11 @@ namespace saba
 		using IKControllerPtr = std::unique_ptr<VMDIKController>;
 		using MorphControllerPtr = std::unique_ptr<VMDMorphController>;
 
-		std::shared_ptr<MMDModel>			m_model;
-		std::vector<NodeControllerPtr>		m_nodeControllers;
-		std::vector<IKControllerPtr>		m_ikControllers;
-		std::vector<MorphControllerPtr>		m_morphControllers;
-		uint32_t	m_maxKeyTime;
+		std::shared_ptr<MMDModel>			m_model; ///< The MMD model
+		std::vector<NodeControllerPtr>		m_nodeControllers; ///< Node controllers
+		std::vector<IKControllerPtr>		m_ikControllers; ///< IK controllers
+		std::vector<MorphControllerPtr>		m_morphControllers; ///< Morph controllers
+		uint32_t	m_maxKeyTime; ///< Maximum key time
 	};
 
 }

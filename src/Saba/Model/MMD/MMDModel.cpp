@@ -225,7 +225,7 @@ namespace saba
 			}
 		}
 
-		// Physicsを反映する
+		// Apply Physics
 		for (int i = 0; i < frameCount; i++)
 		{
 			BeginAnimation();
@@ -255,16 +255,5 @@ namespace saba
 		}
 
 		//SaveBaseAnimation();
-	}
-
-	void MMDModel::UpdateAnimation()
-	{
-		UpdateMorphAnimation();
-		UpdateNodeAnimation(false);
-	}
-
-	void MMDModel::UpdatePhysics(const float elapsed)
-	{
-		UpdatePhysicsAnimation(elapsed);
 	}
 }

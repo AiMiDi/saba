@@ -13,25 +13,40 @@
 
 namespace saba
 {
+	/**
+	 * @brief Represents a bone in a VPD file.
+	 */
 	struct VPDBone
 	{
-		std::string	m_boneName;
-		glm::vec3	m_translate;
-		glm::quat	m_quaternion;
+		std::string	m_boneName; ///< Bone name
+		glm::vec3	m_translate; ///< Translation vector
+		glm::quat	m_quaternion; ///< Rotation quaternion
 	};
 
+	/**
+	 * @brief Represents a morph in a VPD file.
+	 */
 	struct VPDMorph
 	{
-		std::string	m_morphName;
-		float		m_weight;
+		std::string	m_morphName; ///< Morph name
+		float		m_weight; ///< Weight value
 	};
 
+	/**
+	 * @brief Represents a VPD file.
+	 */
 	struct VPDFile
 	{
-		std::vector<VPDBone>	m_bones;
-		std::vector<VPDMorph>	m_morphs;
+		std::vector<VPDBone>	m_bones; ///< List of bones
+		std::vector<VPDMorph>	m_morphs; ///< List of morphs
 	};
 
+	/**
+	 * @brief Reads a VPD file from the specified filename.
+	 * @param vpd Pointer to the VPDFile structure to store the read data.
+	 * @param filename The name of the file to read.
+	 * @return True if the file was read successfully, false otherwise.
+	 */
 	bool ReadVPDFile(VPDFile* vpd, const char* filename);
 }
 

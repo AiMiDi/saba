@@ -4,7 +4,7 @@
 //
 
 #include "VMDCameraAnimation.h"
-#include "VMDAnimationCommon.h"
+#include "VMDAnimationCommon.hpp"
 
 #include <cstdint>
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,11 +20,48 @@ namespace saba
 		}
 	} // namespace
 
-
-	VMDCameraController::VMDCameraController()
-		: m_startKeyIndex(0)
+	struct VMDCameraAnimationKey
 	{
-	}
+		int32_t		m_time;
+		glm::vec3	m_interest;
+		glm::vec3	m_rotate;
+		float		m_distance;
+		float		m_fov;
+
+		VMDBezier	m_ixBezier;
+		VMDBezier	m_iyBezier;
+		VMDBezier	m_izBezier;
+		VMDBezier	m_rotateBezier;
+		VMDBezier	m_distanceBezier;
+		VMDBezier	m_fovBezier;
+	};
+
+	class VMDCameraController
+	{
+	public:
+		using KeyType = VMDCameraAnimationKey;
+
+		VMDCameraController(): m_startKeyIndex(0)
+		{
+		}
+
+		void Evaluate(float t);
+		const MMDCamera& GetCamera() const { return m_camera; }
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
+		size_t GetKeyCount() const { return m_keys.size(); }
+		int32_t GetMaxKeyTime() const;
+
+		void AddKey(const KeyType& key)
+		{
+			m_keys.push_back(key);
+		}
+		void SortKeys();
+
+	private:
+		std::vector<VMDCameraAnimationKey>	m_keys;
+		MMDCamera							m_camera;
+		size_t								m_startKeyIndex;
+	};
 
 	void VMDCameraController::Evaluate(const float t)
 	{
@@ -141,16 +178,7 @@ namespace saba
 		return true;
 	}
 
-	int32_t VMDCameraController::GetStartFrame() const
-	{
-		if (m_keys.empty())
-		{
-			return 0;
-		}
-		return m_keys.front().m_time;
-	}
-
-	int32_t VMDCameraController::GetLastFrame() const
+	int32_t VMDCameraController::GetMaxKeyTime() const
 	{
 		if (m_keys.empty())
 		{
@@ -170,6 +198,14 @@ namespace saba
 		m_camera = m_cameraController->GetCamera();
 	}
 
+	size_t VMDCameraAnimation::GetKeyCount() const
+	{ 
+		return m_cameraController->GetKeyCount();
+	}
 
+	int32_t VMDCameraAnimation::GetMaxKeyTime() const
+	{ 
+		return m_cameraController->GetMaxKeyTime(); 
+	}
 }
 
