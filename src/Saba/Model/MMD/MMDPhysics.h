@@ -10,7 +10,6 @@
 #include "PMXFile.h"
 
 #include <memory>
-#include <cinttypes>
 
 // Bullet Types
 class btRigidBody;
@@ -23,6 +22,8 @@ class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 class btMotionState;
 struct btOverlapFilterCallback;
+class btConstraintSolver;
+class btThreads;
 
 namespace saba
 {
@@ -261,6 +262,7 @@ namespace saba
 		std::unique_ptr<btRigidBody>						m_groundRB;
 		std::unique_ptr<btOverlapFilterCallback>			m_filterCB;
 
+		int                                                  m_maxThreadCount;
 		double	m_fps;
 		int		m_maxSubStepCount;
 	};

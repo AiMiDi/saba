@@ -7,12 +7,13 @@
 
 #include "MMDNode.h"
 #include "MMDModel.h"
-#include "Saba/Base/Log.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
+#include <LinearMath/btThreads.h>
+#include <thread>
 
 namespace saba
 {
@@ -54,9 +55,12 @@ namespace saba
 	};
 
 	MMDPhysics::MMDPhysics()
-		: m_fps(120.0f)
+		: m_maxThreadCount(std::max(1, static_cast<int>(std::thread::hardware_concurrency() / 2)))
+		, m_fps(120.0f)
 		, m_maxSubStepCount(10)
 	{
+		btSetTaskScheduler(btCreateDefaultTaskScheduler());
+		btGetTaskScheduler()->setNumThreads(m_maxThreadCount);
 	}
 
 	MMDPhysics::~MMDPhysics()
@@ -69,7 +73,6 @@ namespace saba
 		m_broadphase = std::make_unique<btDbvtBroadphase>();
 		m_collisionConfig = std::make_unique<btDefaultCollisionConfiguration>();
 		m_dispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfig.get());
-
 		m_solver = std::make_unique<btSequentialImpulseConstraintSolver>();
 
 		m_world = std::make_unique<btDiscreteDynamicsWorld>(
@@ -79,6 +82,8 @@ namespace saba
 			m_collisionConfig.get()
 			);
 
+		m_world->getSolverInfo().m_solverMode |= SOLVER_CACHE_FRIENDLY | SOLVER_USE_ARTICULATED_WARMSTARTING;
+		m_world->getDispatchInfo().m_allowedCcdPenetration = 0.0001f;
 		m_world->setGravity(btVector3(0, -9.8f * 10.0f, 0));
 
 		m_groundShape = std::make_unique<btStaticPlaneShape>(btVector3(0, 1, 0), 0.0f);

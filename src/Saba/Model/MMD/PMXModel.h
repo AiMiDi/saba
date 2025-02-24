@@ -9,7 +9,6 @@
 #include "MMDMaterial.h"
 #include "MMDModel.h"
 #include "MMDIkSolver.h"
-#include "PMXFile.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
@@ -321,14 +320,6 @@ namespace saba
 		 * @return True if loading is successful, false otherwise.
 		 */
 		bool Load(const std::string& filepath, const std::string& mmdDataDir);
-
-		/**
-		 * @brief Save the PMX model to a file.
-		 * @param filepath Path to the PMX file.
-		 * @param mmdDataDir Directory containing MMD data.
-		 * @return True if saving is successful, false otherwise.
-		 */
-		bool Save(const std::string& filepath, const std::string& mmdDataDir);
 
 		/**
 		 * @brief Destroy the PMX model.

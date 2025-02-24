@@ -17,8 +17,10 @@ namespace saba
 {
 	namespace
 	{
+		// Helper function to set up VMD Bezier curve control points
 		void SetVMDBezier(VMDBezier& bezier, const unsigned char* cp)
 		{
+			// Convert control points from VMD format (0-127) to normalized space (0-1)
 			const int x0 = cp[0];
 			const int y0 = cp[4];
 			const int x1 = cp[8];
@@ -28,6 +30,7 @@ namespace saba
 			bezier.m_cp2 = glm::vec2(static_cast<float>(x1) / 127.0f, static_cast<float>(y1) / 127.0f);
 		}
 
+		// Helper function to invert Z axis transformation
 		glm::mat3 InvZ(const glm::mat3& m)
 		{
 			const glm::mat3 invZ = scale(glm::mat4(1), glm::vec3(1, 1, -1));
@@ -37,16 +40,17 @@ namespace saba
 
 	float VMDBezier::EvalX(const float t) const
 	{
+		// Calculate Bezier curve using cubic polynomial form
 		const float t2 = t * t;
 		const float t3 = t2 * t;
 		const float it = 1.0f - t;
 		const float it2 = it * it;
 		const float it3 = it2 * it;
 		const float x[4] = {
-			0,
-			m_cp1.x,
-			m_cp2.x,
-			1,
+			0,          // Start point
+			m_cp1.x,    // First control point
+			m_cp2.x,    // Second control point
+			1           // End point
 		};
 
 		return t3 * x[3] + 3 * t2 * it * x[2] + 3 * t * it2 * x[1] + it3 * x[0];
@@ -98,105 +102,124 @@ namespace saba
 		return t;
 	}
 
-	struct VMDNodeAnimationKey
-	{
+	// Node animation key structure containing position, rotation and interpolation data
+	struct VMDNodeAnimationKey {
 		void Set(const VMDMotion& motion);
 
-		int32_t		m_time;
-		glm::vec3	m_translate;
-		glm::quat	m_rotate;
+		int32_t     m_time;         // Keyframe time
+		glm::vec3   m_translate;    // Translation vector
+		glm::quat   m_rotate;       // Rotation quaternion
 
-		VMDBezier	m_txBezier;
-		VMDBezier	m_tyBezier;
-		VMDBezier	m_tzBezier;
-		VMDBezier	m_rotBezier;
+		// Bezier interpolation curves for each component
+		VMDBezier   m_txBezier;     // X translation
+		VMDBezier   m_tyBezier;     // Y translation
+		VMDBezier   m_tzBezier;     // Z translation
+		VMDBezier   m_rotBezier;    // Rotation
 	};
 
-	struct VMDMorphAnimationKey
-	{
-		int32_t	m_time;
-		float	m_weight;
+	// Morph animation key containing weight values for blend shapes
+	struct VMDMorphAnimationKey {
+		int32_t m_time;     // Keyframe time
+		float   m_weight;   // Morph blend weight
 	};
 
-	struct VMDIKAnimationKey
-	{
-		int32_t	m_time;
-		bool	m_enable;
+	// IK (Inverse Kinematics) animation key for enabling/disabling IK chains
+	struct VMDIKAnimationKey {
+		int32_t m_time;     // Keyframe time
+		bool    m_enable;   // IK chain enabled state
 	};
 
-	class VMDNodeController
-	{
+	// Controller class for node (bone) animations
+	class VMDNodeController {
 	public:
 		using KeyType = VMDNodeAnimationKey;
 
 		VMDNodeController();
 
+		// Set the target node for this controller
 		void SetNode(MMDNode* node);
+		
+		// Evaluate animation at time t with optional weight for blending
 		void Evaluate(float t, float weight = 1.0f);
 		
-		void AddKey(const KeyType& key)
-		{
+		// Add a new keyframe to the controller
+		void AddKey(const KeyType& key) {
 			m_keys.push_back(key);
 		}
+		
+		// Sort keyframes by time for proper interpolation
 		void SortKeys();
-		const  std::vector<KeyType>& GetKeys() const { return m_keys; }
-
+		
+		// Getters
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
 		MMDNode* GetNode() const { return m_node; }
 
 	private:
-		MMDNode*				m_node;
-		std::vector<KeyType>	m_keys;
-		size_t					m_startKeyIndex;
+		MMDNode*                m_node;          // Target node to animate
+		std::vector<KeyType>    m_keys;          // Animation keyframes
+		size_t                  m_startKeyIndex; // Optimization: last evaluated key index
 	};
 
-	class VMDMorphController
-	{
+	// Controller class for morph (blend shape) animations
+	class VMDMorphController {
 	public:
 		using KeyType = VMDMorphAnimationKey;
 
 		VMDMorphController();
 
+		// Set the target morph for this controller
 		void SetBlendKeyShape(MMDMorph* morph);
+		
+		// Evaluate morph weight at time t with optional animation weight
 		void Evaluate(float t, float animWeight = 1.0f);
-
-		void AddKey(const KeyType& key)
-		{
+		
+		// Add a new keyframe
+		void AddKey(const KeyType& key) {
 			m_keys.push_back(key);
 		}
+		
+		// Sort keyframes by time
 		void SortKeys();
+		
+		// Getters
 		const std::vector<KeyType>& GetKeys() const { return m_keys; }
-
 		MMDMorph* GetMorph() const { return m_morph; }
 
 	private:
-		MMDMorph*				m_morph;
-		std::vector<KeyType>	m_keys;
-		size_t					m_startKeyIndex;
+		MMDMorph*               m_morph;         // Target morph to animate
+		std::vector<KeyType>    m_keys;          // Animation keyframes
+		size_t                  m_startKeyIndex; // Optimization: last evaluated key index
 	};
 
-	class VMDIKController
-	{
+	// Controller class for IK (Inverse Kinematics) chains
+	class VMDIKController {
 	public:
 		using KeyType = VMDIKAnimationKey;
 
 		VMDIKController();
 
+		// Set the target IK solver for this controller
 		void SetIKSolver(MMDIkSolver* ikSolver);
+		
+		// Evaluate IK state at time t with optional weight
 		void Evaluate(float t, float weight = 1.0f);
-
-		void AddKey(const KeyType& key)
-		{
+		
+		// Add a new keyframe
+		void AddKey(const KeyType& key) {
 			m_keys.push_back(key);
 		}
+		
+		// Sort keyframes by time
 		void SortKeys();
+		
+		// Getters
 		const std::vector<KeyType>& GetKeys() const { return m_keys; }
-
 		MMDIkSolver* GetIkSolver() const { return m_ikSolver; }
 
 	private:
-		MMDIkSolver*			m_ikSolver;
-		std::vector<KeyType>	m_keys;
-		size_t					m_startKeyIndex;
+		MMDIkSolver*            m_ikSolver;      // Target IK solver
+		std::vector<KeyType>    m_keys;          // Animation keyframes
+		size_t                  m_startKeyIndex; // Optimization: last evaluated key index
 	};
 
 	VMDNodeController::VMDNodeController()
@@ -294,7 +317,7 @@ namespace saba
 
 	bool VMDAnimation::Add(const VMDFile & vmd)
 	{
-		// Node Controller
+		// Process node (bone) animations
 		std::map<std::string, NodeControllerPtr> nodeCtrlMap;
 		for (auto& nodeCtrl : m_nodeControllers)
 		{
@@ -474,30 +497,29 @@ namespace saba
 
 	void VMDAnimation::SyncPhysics(const float t, const int frameCount) const
 	{
-	/*
-		Immediate application of animation can cause physics to break.
-		Example: Legs breaking through the skirt, etc.
-		When applying animation, transition to the target pose over several frames from the initial state.
-	*/
-	m_model->SaveBaseAnimation();
+		/*
+		 * Physics synchronization is crucial for realistic animation
+		 * We need to gradually transition to target pose to avoid physics anomalies
+		 * like legs clipping through skirts or sudden jerky movements
+		 */
+		m_model->SaveBaseAnimation();
 
-	// Apply physics
-	for (int i = 0; i < frameCount; i++)
-	{
-		m_model->BeginAnimation();
+		// Apply physics simulation over multiple frames for smooth transition
+		for (int i = 0; i < frameCount; i++) {
+			m_model->BeginAnimation();
 
-		Evaluate(t, static_cast<float>(1 + i) / static_cast<float>(frameCount));
+			// Gradually blend from initial to target pose
+			const float blendWeight = static_cast<float>(1 + i) / static_cast<float>(frameCount);
+			Evaluate(t, blendWeight);
 
-		m_model->UpdateMorphAnimation();
+			// Update animation components
+			m_model->UpdateMorphAnimation();
+			m_model->UpdateNodeAnimation(false);
+			m_model->UpdatePhysicsAnimation(1.0f / 30.0f);  // Fixed timestep for physics
+			m_model->UpdateNodeAnimation(true);
 
-		m_model->UpdateNodeAnimation(false);
-
-		m_model->UpdatePhysicsAnimation(1.0f / 30.0f);
-
-		m_model->UpdateNodeAnimation(true);
-
-		m_model->EndAnimation();
-	}
+			m_model->EndAnimation();
+		}
 	}
 
 	int32_t VMDAnimation::CalculateMaxKeyTime() const
