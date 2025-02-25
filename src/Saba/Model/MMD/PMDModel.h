@@ -188,7 +188,7 @@ namespace saba
 		 * @param mmdDataDir The directory containing MMD data.
 		 * @return True if the model was loaded successfully, false otherwise.
 		 */
-		bool Load(const std::string& filepath, const std::string& mmdDataDir);
+		bool Load(const std::string& filepath, const std::string& mmdDataDir) override;
 
 		/**
 		 * @brief Destroy the PMD model.

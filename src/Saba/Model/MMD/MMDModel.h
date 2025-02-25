@@ -427,6 +427,14 @@ namespace saba
 		virtual void SetParallelUpdateHint(uint32_t parallelCount) = 0;
 
 		/**
+		 * @brief Load a PMX/PMD model from the specified file path.
+		 * @param filepath The path to the PMX/PMD file.
+		 * @param mmdDataDir The directory containing MMD data.
+		 * @return True if the model was loaded successfully, false otherwise.
+		 */
+		virtual bool Load(const std::string& filepath, const std::string& mmdDataDir) = 0;
+
+		/**
 		 * @brief Update all animations.
 		 * @param vmdAnim The VMD animation.
 		 * @param vmdFrame The VMD frame.

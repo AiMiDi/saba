@@ -320,7 +320,7 @@ namespace saba
 		 * @param mmdDataDir Directory containing MMD data.
 		 * @return True if loading is successful, false otherwise.
 		 */
-		bool Load(const std::string& filepath, const std::string& mmdDataDir);
+		bool Load(const std::string& filepath, const std::string& mmdDataDir) override;
 
 		/**
 		 * @brief Save the PMX model to a file.
